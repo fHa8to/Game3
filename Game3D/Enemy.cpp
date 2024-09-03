@@ -1,5 +1,6 @@
 #include "Enemy.h"
 #include "DxLib.h"
+#include "Player.h"
 #include <cmath>
 
 namespace
@@ -18,12 +19,8 @@ namespace
 	constexpr float kAnimChangeFrame = 8.0f;
 	constexpr float kAnimChangeRateSpeed = 1.0f / kAnimChangeFrame;
 
-	//アナログスティックによる移動関連
-	constexpr float kMaxSpeed = 0.1f;		//プレイヤーの最大移動速度
-	constexpr float kAnalogRaneMin = 0.1f;	//アナログスティックの入力判定範囲
-	constexpr float kAnalogRaneMax = 0.8f;
-	constexpr float kAnglogInputMax = 1000.0f;	//アナログスティックの入力されるベクトルに
-
+	//当たり判定
+	constexpr float kAddPosY = 8.0f;
 }
 
 Enemy::Enemy():
@@ -55,8 +52,9 @@ void Enemy::Init()
 
 }
 
-void Enemy::Update()
+void Enemy::Update(Player& player)
 {	
+	VECTOR enemyToPlayer = VSub(player.GetPos(), pos);
 
 	// ３Dモデルのポジション設定
 	MV1SetPosition(modelHandle, pos);
@@ -66,4 +64,37 @@ void Enemy::Draw()
 {
 	// ３Ｄモデルの描画
 	MV1DrawModel(modelHandle);
+
+#ifdef _DEBUG
+
+	DrawSphere3D(VAdd(pos, VGet(0, 8, 0)), m_radius, 8, 0xffffff, 0xffffff, false);
+	DrawFormatString(0, 32, 0xffffff, "Enemy(x:%f,y:%f,z:%f)", pos.x, pos.y, pos.z);
+
+#endif
+
+}
+
+//球の当たり判定
+bool Enemy::SphereHitFlag(std::shared_ptr<Player> pPlayer)
+{
+	float delX = (pos.x - pPlayer->GetPos().x) * (pos.x - pPlayer->GetPos().x);
+	float delY = ((pos.y + kAddPosY) - (pPlayer->GetPos().y + kAddPosY)) *
+		((pos.y + kAddPosY) - (pPlayer->GetPos().y + kAddPosY));
+	float delZ = (pos.z - pPlayer->GetPos().z) * (pos.z - pPlayer->GetPos().z);
+
+	//球と球の距離
+	float Distance = sqrt(delX + delY + delZ);
+
+	//球と球の距離がプレイヤとエネミーの半径よりも小さい場合
+	if (Distance < m_radius + pPlayer->GetRadius())
+	{
+		return true;
+	}
+
+	return false;
+}
+
+bool Enemy::AttackSphereHitFlag(std::shared_ptr<Player> pPlayer)
+{
+	return false;
 }

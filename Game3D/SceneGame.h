@@ -5,6 +5,11 @@
 #include "Gauge.h"
 #include "SceneBase.h"
 
+class Camera;
+class Player;
+class Enemy;
+class Gauge;
+
 class SceneGame : public SceneBase
 {
 public:
@@ -18,10 +23,35 @@ public:
 
 
 private:
-	Camera	m_camera;
-	Player	m_player;
-	Enemy	m_enemy;
-	Gauge	m_gauge;
+	std::shared_ptr<Camera> m_pCamera;
+	std::shared_ptr<Player> m_pPlayer;
+	std::shared_ptr<Enemy> m_pEnemy;
+	std::shared_ptr<Gauge> m_pGauge;
+
+private:
+	//フェードイン、アウト
+	int m_fadeAlpha;
+
+	//シーン終了フラグ
+	bool m_isSceneEnd;
+
+	//ゲームクリアなのかのフラグ
+	bool m_isGameClear;
+
+	//プレイヤーに当たったかのフラグ
+	bool m_isHitPlayer;
+
+	//プレイヤーのHPが0になったかのフラグ
+	bool m_isHp0;
+
+	//ステージをクリアしたか
+	bool m_isStageClear;
+
+	//プレイヤーの座標
+	VECTOR m_playerPos;
+
+	//カメラの座標
+	VECTOR m_cameraPos;
 
 
 };

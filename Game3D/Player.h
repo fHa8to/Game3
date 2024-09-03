@@ -11,19 +11,13 @@ public:
 	void Update();
 	void Draw();
 
-	//攻撃がヒットしたとき
-	void HitAttack();
+	//半径の取得
+	float GetRadius() { return m_radius; }
 
+
+	//プレイヤー
 	const VECTOR& GetPos() const { return pos; }
 
-	// ダメージを食らったとき
-	void OnDamage(VECTOR targetPos, int damagePoint);
-
-	//ガード中に攻撃されたとき
-	void OnGuardingAttack();
-
-	//ジャストガード中に攻撃されたとき
-	void OnJustGuardingAttack();
 
 
 
@@ -48,6 +42,9 @@ private:
 	VECTOR attackPos;
 
 	float angle;
+
+	//当たり判定の半径
+	float m_radius;
 
 	//カメラ情報
 	float cameraAngle;
