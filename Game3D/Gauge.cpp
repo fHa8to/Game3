@@ -36,7 +36,7 @@ void Gauge::Update()
 void Gauge::Draw()
 {
 	//playerDrawValue ‚Ì’l‚ð•\Ž¦
-	DrawFormatString(20, 600, GetColor(0, 255, 255), "playerHp :%4d", playerDrawValue);
+	DrawFormatString(20, 600, GetColor(0, 255, 255), "HP :%4d", playerDrawValue);
 
 	int color = GetColor(0, 255, 0);
 
