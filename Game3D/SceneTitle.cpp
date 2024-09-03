@@ -2,9 +2,18 @@
 #include "DxLib.h"
 #include "SceneGame.h"
 #include "Game.h"
+#include "Pad.h"
 
+namespace
+{
+	//フェードイン、フェードアウトの数値
+	constexpr int kFadeValue = 255;
 
-SceneTitle::SceneTitle()
+	//フェード値の増減
+	constexpr int kFadeUpDown = 8;
+}
+
+SceneTitle::SceneTitle():m_state(kWait)
 {
 }
 
@@ -14,17 +23,45 @@ SceneTitle::~SceneTitle()
 
 void SceneTitle::Init()
 {
+	isSceneEnd = false;
+
 }
 
 std::shared_ptr<SceneBase> SceneTitle::Update()
 {
-	int Key = GetJoypadInputState(DX_INPUT_KEY_PAD1);
-	if (Key & PAD_INPUT_1)	// パッドの1ボタンorキーボードのZキー
+	if (Pad::isTrigger(PAD_INPUT_A))	// パッドの1ボタンorキーボードのZキー
 	{
 
+		isSceneEnd = true;
+
+	}
+
+	if(isSceneEnd && fadeAlpha >= kFadeValue)
+	{
 		return std::make_shared<SceneGame>();
 
 	}
+
+	m_state = kWait;
+
+	//フレームイン、アウト
+	if (isSceneEnd)
+	{
+		fadeAlpha += kFadeUpDown;
+		if (fadeAlpha > kFadeValue)
+		{
+			fadeAlpha = kFadeValue;
+		}
+	}
+	else
+	{
+		fadeAlpha -= kFadeUpDown;
+		if (fadeAlpha < 0)
+		{
+			fadeAlpha = 0;
+		}
+	}
+
 	return shared_from_this();
 }
 

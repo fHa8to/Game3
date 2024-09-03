@@ -4,6 +4,7 @@
 #include "SceneClear.h"
 #include "Game.h"
 #include "Gauge.h"
+#include "Pad.h"
 
 
 SceneGame::SceneGame()
@@ -29,8 +30,7 @@ std::shared_ptr<SceneBase> SceneGame::Update()
 	m_player.Update();
 	m_enemy.Update();
 	m_gauge.Update();
-	int Key = GetJoypadInputState(DX_INPUT_KEY_PAD1);
-	if (Key & PAD_INPUT_2)
+	if (Pad::isTrigger PAD_INPUT_4)
 	{
 		return std::make_shared<SceneClear>();
 

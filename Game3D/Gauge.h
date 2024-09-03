@@ -20,5 +20,9 @@ private:
 	int playerDrawValue;
 	int keyState[256] = { 0 };
 
+	int enemyHp;
+	int enemyDrawValue;
+	int enemykeyState[256] = { 0 };
+
 };
 

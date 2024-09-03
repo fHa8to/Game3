@@ -45,6 +45,8 @@ private:
 
 	//•\¦î•ñ
 	VECTOR pos;
+	VECTOR attackPos;
+
 	float angle;
 
 	//ƒJƒƒ‰î•ñ

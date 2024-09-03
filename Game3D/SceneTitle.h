@@ -12,5 +12,22 @@ public:
 	virtual void Draw();
 	virtual void End();
 
+private:
+	enum state
+	{
+		kWait,
+	};
+
+private:
+
+	int m_state;
+
+	int handle;
+
+	int fadeAlpha;
+
+	bool isSceneEnd;
+
+
 };
 

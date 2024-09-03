@@ -13,6 +13,8 @@ void Gauge::Init()
 {
 	playerHp = HP_MAX;
 	playerDrawValue = playerHp * DRAW_SIZE;
+	enemyHp = HP_MAX;
+	enemyDrawValue = playerHp * DRAW_SIZE;
 }
 
 void Gauge::Update()
@@ -24,13 +26,25 @@ void Gauge::Update()
 		playerHp -= 1;
 	}
 
-	int TargetValut = playerHp * DRAW_SIZE;
+	int pTargetValut = playerHp * DRAW_SIZE;
 
-	if (playerDrawValue > TargetValut)
+	if (playerDrawValue > pTargetValut)
 	{
 		playerDrawValue--;
 	}
-	
+
+	if (keyState[KEY_INPUT_UP] == 1)
+	{
+		enemyHp -= 1;
+	}
+
+	int eTargetValut = enemyHp * DRAW_SIZE;
+
+	if (enemyDrawValue > eTargetValut)
+	{
+		enemyDrawValue--;
+	}
+
 }
 
 void Gauge::Draw()
@@ -38,18 +52,19 @@ void Gauge::Draw()
 	//playerDrawValue ‚Ì’l‚ð•\Ž¦
 	DrawFormatString(20, 600, GetColor(0, 255, 255), "HP :%4d", playerDrawValue);
 
-	int color = GetColor(0, 255, 0);
+	int playerColor = GetColor(0, 255, 0);
+	
+	int enemyColor = GetColor(255, 0, 0);
 
-	if (playerDrawValue < HP_MAX * DRAW_SIZE / 2)
-	{
-		color = GetColor(255, 255, 0);
-	}
 
-	if (playerDrawValue <= 1 * DRAW_SIZE)
-	{
-		color = GetColor(255, 0, 0);
-	}
+	DrawFormatString(20, 50, GetColor(0, 255, 255), "HP :%4d", enemyDrawValue);
 
-	DrawFillBox(100, 600, 100 + playerDrawValue, 616, color);
+
+	DrawFillBox(100, 600, 100 + playerDrawValue, 616, playerColor);
 	DrawLineBox(100, 600, 350, 616, GetColor(255, 255, 255));
+
+
+
+	DrawFillBox(100, 50, 100 + enemyDrawValue, 66, enemyColor);
+	DrawLineBox(100, 50, 350, 66, GetColor(255, 255, 255));
 }
