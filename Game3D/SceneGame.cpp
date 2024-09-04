@@ -22,8 +22,6 @@ namespace
 
 SceneGame::SceneGame()
 {
-	m_pCamera = std::make_shared<Camera>();
-	m_pPlayer = std::make_shared<Player>();
 	m_pEnemy = std::make_shared<Enemy>();
 	m_pGauge = std::make_shared<Gauge>();
 
@@ -31,13 +29,24 @@ SceneGame::SceneGame()
 
 SceneGame::~SceneGame()
 {
+	delete m_pPlayer;
+	m_pPlayer = nullptr;
+
+
+	delete m_pCamera;
+	m_pCamera = nullptr;
+
 }
 
 void SceneGame::Init()
 {
+	m_pPlayer = new Player;
 	m_pPlayer->Init();
 	m_pEnemy->Init();
 	m_pGauge->Init();
+	m_pCamera = new Camera;
+	m_pCamera->Init();
+
 
 }
 
@@ -52,7 +61,7 @@ std::shared_ptr<SceneBase> SceneGame::Update()
 	m_pEnemy->Update(*m_pPlayer);
 	m_pGauge->Update();
 	m_pCamera->Update(m_playerPos);
-	if (Pad::isTrigger PAD_INPUT_4)
+	if (Pad::IsTrigger PAD_INPUT_4)
 	{
 		return std::make_shared<SceneClear>();
 
@@ -65,6 +74,7 @@ void SceneGame::Draw()
 	m_pPlayer->Draw();
 	m_pEnemy->Draw();
 	m_pGauge->Draw();
+	m_pCamera->Draw();
 	DrawString(8, 8, "SceneGame", GetColor(255, 255, 255));
 }
 

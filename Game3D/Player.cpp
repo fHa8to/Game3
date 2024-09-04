@@ -46,11 +46,11 @@ namespace
 
 Player::Player():
 	modelHandle(-1),
-	currentAnimNo(-1),
-	prevAnimNo(-1),
-	animBlendRate(0.0f),
+	m_currentAnimNo(-1),
+	m_prevAnimNo(-1),
+	m_animBlendRate(0.0f),
 	angle(0.0f),
-	cameraAngle(0.0f)
+	m_cameraAngle(0.0f)
 {
 	//3Dモデルの読み込み
 	modelHandle = MV1LoadModel(kModelFilename);
@@ -65,13 +65,13 @@ void Player::Init()
 
 	MV1SetScale(modelHandle, VGet(kExpansion, kExpansion, kExpansion));
 
-	currentAnimNo = MV1AttachAnim(modelHandle, kIdleAnimIndex, -1, false);
-	prevAnimNo - 1;
-	animBlendRate = 1.0f;
+	m_currentAnimNo = MV1AttachAnim(modelHandle, kIdleAnimIndex, -1, false);
+	m_prevAnimNo - 1;
+	m_animBlendRate = 1.0f;
 
 	//プレイヤーの初期位置設定
-	pos = VGet(kPosX, kPosY, 0.0f);
-	attackPos = VAdd(pos, VGet(0.0f, 7.0f, 4.0f));
+	m_pos = VGet(kPosX, kPosY, 0.0f);
+	m_attackPos = VAdd(m_pos, VGet(0.0f, 7.0f, 4.0f));
 
 
 }
@@ -79,172 +79,122 @@ void Player::Init()
 void Player::Update(VECTOR cameraPos)
 {
 	//アニメーションの切り替え
-	if (prevAnimNo != -1)
+	if (m_prevAnimNo != -1)
 	{
-		animBlendRate += kAnimChangeRateSpeed;
-		if (animBlendRate >= 1.0f)	animBlendRate = 1.0f;
+		m_animBlendRate += kAnimChangeRateSpeed;
+		if (m_animBlendRate >= 1.0f)	m_animBlendRate = 1.0f;
 		//変更前のアニメーション100%
-		MV1SetAttachAnimBlendRate(modelHandle, prevAnimNo, 1.0f - animBlendRate);
+		MV1SetAttachAnimBlendRate(modelHandle, m_prevAnimNo, 1.0f - m_animBlendRate);
 		//変更後のアニメーション0%
-		MV1SetAttachAnimBlendRate(modelHandle, currentAnimNo, animBlendRate);
+		MV1SetAttachAnimBlendRate(modelHandle, m_currentAnimNo, m_animBlendRate);
 
 	}
 
 
 
 	//アニメーションを進める
-	bool isLoop = UpdateAnim(currentAnimNo);
-	UpdateAnim(prevAnimNo);
-	if (Pad::isPress(PAD_INPUT_RIGHT))
+	bool isLoop = UpdateAnim(m_currentAnimNo);
+	UpdateAnim(m_prevAnimNo);
+	if (Pad::IsPress(PAD_INPUT_RIGHT))
 	{
 		m_state = kMove;
 		m_direction = kDown;
-		pos = VAdd(pos, VGet(0.0f,
+		m_pos = VAdd(m_pos, VGet(0.0f,
 			0.0f,
 			-kSpped));
 
 
 	}
-	if (Pad::isRelase(PAD_INPUT_RIGHT))
+	if (Pad::IsRelase(PAD_INPUT_RIGHT))
 	{
 		m_state = kWait;
 	}
 
 	//移動
-	if (Pad::isPress(PAD_INPUT_LEFT))
+	if (Pad::IsPress(PAD_INPUT_LEFT))
 	{
 		m_state = kMove;
 		m_direction = kUp;
-		pos = VAdd(pos, VGet(0.0f,
+		m_pos = VAdd(m_pos, VGet(0.0f,
 			0.0f,
 			kSpped));
 
 
 	}
-	if (Pad::isRelase(PAD_INPUT_LEFT))
+	if (Pad::IsRelase(PAD_INPUT_LEFT))
 	{
 		m_state = kWait;
 	}
 
 	//移動
-	if (Pad::isPress(PAD_INPUT_UP))
+	if (Pad::IsPress(PAD_INPUT_UP))
 	{
 		m_state = kMove;
 		m_direction = kRight;
-		pos = VAdd(pos, VGet(kSpped,
+		m_pos = VAdd(m_pos, VGet(kSpped,
 			0.0f,
 			0.0f));
 
 
 	}
-	if (Pad::isRelase(PAD_INPUT_UP))
+	if (Pad::IsRelase(PAD_INPUT_UP))
 	{
 		m_state = kWait;
 	}
 
 	//移動
-	if (Pad::isPress(PAD_INPUT_DOWN))
+	if (Pad::IsPress(PAD_INPUT_DOWN))
 	{
 		m_state = kMove;
 		m_direction = kLeft;
-		pos = VAdd(pos, VGet(-kSpped,
+		m_pos = VAdd(m_pos, VGet(-kSpped,
 			0.0f,
 			0.0f));
 
 
 	}
-	if (Pad::isRelase(PAD_INPUT_DOWN))
+	if (Pad::IsRelase(PAD_INPUT_DOWN))
 	{
 		m_state = kWait;
 	}
 
-	if (!isAttack)
+	if (Pad::IsPress(PAD_INPUT_2))
 	{
 
-		if (Pad::isTrigger PAD_INPUT_1)
+	}
+
+	if (!m_isAttack)
+	{
+
+		if (Pad::IsTrigger PAD_INPUT_1)
 		{
-			isAttack = true;
+			m_isAttack = true;
 			ChangeAnim(kAttackAnimIndex);
 
 		}
-	//	else
-	//	{
-	//		//アナログスティックを使って移動
-	//		int analogX = 0;
-	//		int analogZ = 0;
-
-	//		GetJoypadAnalogInput(&analogX, &analogZ, DX_INPUT_KEY_PAD1);
-
-
-	//		//アナログスティックの入力の10% ~ 80%の範囲を使用する
-
-	//		//ベクトルの長さが最大で1000になる
-
-	//		//プレイヤーの最大移動速度は 0.01f / frame
-
-	//		VECTOR move = VGet(analogX, 0.0f, -analogZ);	//ベクトルの長さ0~1000
-	//		//0.00~0.01の長さにする
-	//		//ベクトルの長さを取得する
-	//		float len = VSize(move);
-	//		//ベクトルの長さを0.0~1.0に割合に変換する
-	//		float rate = len / kAnglogInputMax;
-
-	//		//アナログスティック無効な範囲を除外する
-	//		rate = (rate - kAnalogRaneMin) / (kAnalogRaneMax - kAnalogRaneMin);
-	//		rate = min(rate, 1.0f);
-	//		rate = max(rate, 0.0f);
-
-	//		//速度が決定できるので移動ベクトルに反映する
-	//		move = VNorm(move);
-	//		float speed = kMaxSpeed * rate;
-	//		move = VScale(move, speed);
-
-	//		MATRIX mtx = MGetRotY(-cameraAngle - DX_PI_F / 2);
-	//		move = VTransform(move, mtx);
-
-
-	//		//移動方向からプレイヤーの向く方向を決定する
-	//		if (VSquareSize(move) > 0.0f)
-	//		{
-	//			angle = -atan2f(move.z, move.x) - DX_PI_F / 2;
-	//		}
-
-	//		pos = VAdd(pos, move);
-
-	//		if (Pad::isPress PAD_INPUT_2)
-	//		{
-	//			ChangeAnim(kRunAnimIndex);
-	//			move = VScale(move, 1.2f);
-	//			pos = VAdd(pos, move);
-	//		}
-
-	//		VECTOR attackMove = VScale(move, 15.0f);
-	//		attackPos = VAdd(pos, attackMove);
-	//	}
-	}
-	else
-	{
-		//攻撃アニメーションが終了したら待機アニメーションを再生する
-		if (isLoop)
+		else
 		{
+			//攻撃アニメーションが終了したら待機アニメーションを再生する
+			if (isLoop)
+			{
 
-			isAttack = false;
-			ChangeAnim(kIdleAnimIndex);
+				m_isAttack = false;
+				ChangeAnim(kIdleAnimIndex);
+			}
 		}
+
 	}
-
-
 	// ３Dモデルのポジション設定
-	MV1SetPosition(modelHandle, pos);
+	MV1SetPosition(modelHandle, m_pos);
 	MV1SetRotationXYZ(modelHandle, VGet(0, angle, 0));
-
-
+	
 }
 
 void Player::Draw()
 {
 	// ３Ｄモデルの描画
 	MV1DrawModel(modelHandle);
+
 }
 
 
@@ -275,22 +225,22 @@ bool Player::UpdateAnim(int attachNo)
 void Player::ChangeAnim(int animIndex)
 {
 	//さらに古いアニメーションがアタッチされている場合はこの時点で削除しておく
-	if (prevAnimNo != -1)
+	if (m_prevAnimNo != -1)
 	{
-		MV1DetachAnim(modelHandle, prevAnimNo);
+		MV1DetachAnim(modelHandle, m_prevAnimNo);
 	}
 
 	//現在再生中の待機アニメーションは変更前のアニメーション扱いに
-	prevAnimNo = currentAnimNo;
+	m_prevAnimNo = m_currentAnimNo;
 
 	//変更後のアニメーションとして攻撃アニメーションを改めて設定する
-	currentAnimNo = MV1AttachAnim(modelHandle, animIndex, -1, false);
+	m_currentAnimNo = MV1AttachAnim(modelHandle, animIndex, -1, false);
 
 	//切り替えの瞬間は変更後のアニメーションが再生される
-	animBlendRate = 0.0f;
+	m_animBlendRate = 0.0f;
 
 	//変更前のアニメーション100%
-	MV1SetAttachAnimBlendRate(modelHandle, prevAnimNo, 1.0f - animBlendRate);
+	MV1SetAttachAnimBlendRate(modelHandle, m_prevAnimNo, 1.0f - m_animBlendRate);
 	//変更後のアニメーション0%
-	MV1SetAttachAnimBlendRate(modelHandle, currentAnimNo, animBlendRate);
+	MV1SetAttachAnimBlendRate(modelHandle, m_currentAnimNo, m_animBlendRate);
 }

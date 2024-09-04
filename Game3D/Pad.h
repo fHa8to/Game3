@@ -7,10 +7,10 @@ namespace Pad
 	void Update();
 
 	// ‰Ÿ‚µ‰º‚°”»’è
-	bool isPress(int key);
+	bool IsPress(int key);
 	// ƒgƒŠƒK[”»’è
-	bool isTrigger(int key);
+	bool IsTrigger(int key);
 	//—£‚µ‚½”»’è
-	bool isRelase(int key);
+	bool IsRelase(int key);
 
 }

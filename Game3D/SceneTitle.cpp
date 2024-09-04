@@ -29,7 +29,7 @@ void SceneTitle::Init()
 
 std::shared_ptr<SceneBase> SceneTitle::Update()
 {
-	if (Pad::isTrigger(PAD_INPUT_A))	// パッドの1ボタンorキーボードのZキー
+	if (Pad::IsTrigger(PAD_INPUT_A))	// パッドの1ボタンorキーボードのZキー
 	{
 
 		isSceneEnd = true;

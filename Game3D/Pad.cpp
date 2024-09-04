@@ -18,12 +18,12 @@ namespace Pad
 		nowPad = GetJoypadInputState(DX_INPUT_KEY_PAD1);
 	}
 
-	bool isPress(int key)
+	bool IsPress(int key)
 	{
 		return (nowPad & key);
 	}
 
-	bool isTrigger(int key)
+	bool IsTrigger(int key)
 	{
 
 		bool isNow = (nowPad & key);
@@ -36,7 +36,7 @@ namespace Pad
 		return false;
 	}
 
-	bool isRelase(int key)
+	bool IsRelase(int key)
 	{
 		bool isNow = (nowPad & key);	// このフレーム
 		bool isLast = (lastPad & key);	// 前のフレーム

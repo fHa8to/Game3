@@ -15,9 +15,10 @@ public:
 	float GetRadius() { return m_radius; }
 
 
-	//プレイヤー
-	const VECTOR& GetPos() const { return pos; }
-
+	//プレイヤーの座標を取得	
+	const VECTOR& GetPos() const { return m_pos; }
+	void Set(const VECTOR pos) { m_pos = pos; }
+		 
 
 
 
@@ -48,9 +49,9 @@ private:
 	int		modelHandle;	//モデルハンドル
 
 	//アニメーション情報
-	int currentAnimNo;
-	int prevAnimNo;
-	float animBlendRate;
+	int m_currentAnimNo;
+	int m_prevAnimNo;
+	float m_animBlendRate;
 
 	//状態
 	int m_state;
@@ -67,8 +68,8 @@ private:
 
 
 	//表示情報
-	VECTOR pos;
-	VECTOR attackPos;
+	VECTOR m_pos;
+	VECTOR m_attackPos;
 	//カメラの位置
 	VECTOR m_cameraPos;
 
@@ -78,9 +79,9 @@ private:
 	float m_radius;
 
 	//カメラ情報
-	float cameraAngle;
+	float m_cameraAngle;
 
-	int isAttack;
+	int m_isAttack;
 
 
 };

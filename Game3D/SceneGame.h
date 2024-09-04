@@ -23,10 +23,11 @@ public:
 
 
 private:
-	std::shared_ptr<Camera> m_pCamera;
-	std::shared_ptr<Player> m_pPlayer;
 	std::shared_ptr<Enemy> m_pEnemy;
 	std::shared_ptr<Gauge> m_pGauge;
+	Player* m_pPlayer;
+	Camera* m_pCamera;
+
 
 private:
 	//フェードイン、アウト
