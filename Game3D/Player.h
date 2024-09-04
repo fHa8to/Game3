@@ -11,6 +11,8 @@ public:
 	void Update(VECTOR cameraPos);
 	void Draw();
 
+	void Botton(VECTOR cameraPos);
+
 	//”¼Œa‚ÌŽæ“¾
 	float GetRadius() { return m_radius; }
 

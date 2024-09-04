@@ -23,6 +23,8 @@ namespace
 
 	//移動量
 	constexpr float kSpped = 15.0f;
+	//走る速さ
+	constexpr float kDash = 15.0f;
 
 	//初期座標
 	constexpr float kPosX = 40.0f;
@@ -95,6 +97,45 @@ void Player::Update(VECTOR cameraPos)
 	//アニメーションを進める
 	bool isLoop = UpdateAnim(m_currentAnimNo);
 	UpdateAnim(m_prevAnimNo);
+	
+	Botton(cameraPos);
+
+	if (!m_isAttack)
+	{
+
+		if (Pad::IsTrigger PAD_INPUT_1)
+		{
+			m_isAttack = true;
+			ChangeAnim(kAttackAnimIndex);
+
+		}
+		else
+		{
+			//攻撃アニメーションが終了したら待機アニメーションを再生する
+			if (isLoop)
+			{
+
+				m_isAttack = false;
+				ChangeAnim(kIdleAnimIndex);
+			}
+		}
+
+	}
+	// ３Dモデルのポジション設定
+	MV1SetPosition(modelHandle, m_pos);
+	MV1SetRotationXYZ(modelHandle, VGet(0, angle, 0));
+	
+}
+
+void Player::Draw()
+{
+	// ３Ｄモデルの描画
+	MV1DrawModel(modelHandle);
+
+}
+
+void Player::Botton(VECTOR cameraPos)
+{
 	if (Pad::IsPress(PAD_INPUT_RIGHT))
 	{
 		m_state = kMove;
@@ -158,44 +199,8 @@ void Player::Update(VECTOR cameraPos)
 		m_state = kWait;
 	}
 
-	if (Pad::IsPress(PAD_INPUT_2))
-	{
-
-	}
-
-	if (!m_isAttack)
-	{
-
-		if (Pad::IsTrigger PAD_INPUT_1)
-		{
-			m_isAttack = true;
-			ChangeAnim(kAttackAnimIndex);
-
-		}
-		else
-		{
-			//攻撃アニメーションが終了したら待機アニメーションを再生する
-			if (isLoop)
-			{
-
-				m_isAttack = false;
-				ChangeAnim(kIdleAnimIndex);
-			}
-		}
-
-	}
-	// ３Dモデルのポジション設定
-	MV1SetPosition(modelHandle, m_pos);
-	MV1SetRotationXYZ(modelHandle, VGet(0, angle, 0));
-	
 }
 
-void Player::Draw()
-{
-	// ３Ｄモデルの描画
-	MV1DrawModel(modelHandle);
-
-}
 
 
 bool Player::UpdateAnim(int attachNo)
