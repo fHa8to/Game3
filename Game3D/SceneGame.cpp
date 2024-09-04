@@ -43,11 +43,15 @@ void SceneGame::Init()
 
 std::shared_ptr<SceneBase> SceneGame::Update()
 {
+	m_cameraPos = m_pCamera->GetCameraPos();
 
-	m_pCamera->Update();
-	m_pPlayer->Update();
+	m_pPlayer->Update(m_cameraPos);
+
+	m_playerPos = m_pPlayer->GetPos();
+
 	m_pEnemy->Update(*m_pPlayer);
 	m_pGauge->Update();
+	m_pCamera->Update(m_playerPos);
 	if (Pad::isTrigger PAD_INPUT_4)
 	{
 		return std::make_shared<SceneClear>();

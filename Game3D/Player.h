@@ -8,7 +8,7 @@ public:
 	virtual ~Player();
 
 	void Init();
-	void Update();
+	void Update(VECTOR cameraPos);
 	void Draw();
 
 	//半径の取得
@@ -29,6 +29,22 @@ private:
 
 
 private:
+	enum  state
+	{
+		kWait,			//待機中
+		kMove,			//動いている
+	};
+
+	//プレイヤーがどちらを向いているか
+	enum direction
+	{
+		kRight,
+		kLeft,
+		kUp,
+		kDown
+	};
+
+private:
 	int		modelHandle;	//モデルハンドル
 
 	//アニメーション情報
@@ -36,10 +52,25 @@ private:
 	int prevAnimNo;
 	float animBlendRate;
 
+	//状態
+	int m_state;
+
+	//向いている方向
+	int m_direction;
+
+	//Aボタンを何回押したか
+	int m_countAButton;
+
+	//Xボタンを何回押したか
+	int m_countXButton;
+
+
 
 	//表示情報
 	VECTOR pos;
 	VECTOR attackPos;
+	//カメラの位置
+	VECTOR m_cameraPos;
 
 	float angle;
 
@@ -50,6 +81,7 @@ private:
 	float cameraAngle;
 
 	int isAttack;
+
 
 };
 

@@ -8,6 +8,10 @@ namespace
 	//モデルのファイル名
 	const char* const kModelFilename = "data/model/Knight.mv1";
 
+	//モデルのサイズ変更
+	constexpr float kExpansion = 100.0f;
+
+
 	//アニメーション番号
 	constexpr int kIdleAnimIndex = 1;
 	//攻撃判定が発生するまでにかかる時間
@@ -31,6 +35,8 @@ Enemy::Enemy():
 	angle(0.0f)
 
 {
+	//3Dモデルの読み込み
+	modelHandle = MV1LoadModel(kModelFilename);
 }
 
 Enemy::~Enemy()
@@ -39,15 +45,14 @@ Enemy::~Enemy()
 
 void Enemy::Init()
 {
-	//3Dモデルの読み込み
-	modelHandle = MV1LoadModel(kModelFilename);
+	MV1SetScale(modelHandle, VGet(kExpansion, kExpansion, kExpansion));
 
 	currentAnimNo = MV1AttachAnim(modelHandle, kIdleAnimIndex, -1, false);
 	prevAnimNo - 1;
 	animBlendRate = 1.0f;
 
 	//プレイヤーの初期位置設定
-	pos = VGet(0.0f, 0.0f, 5.0f);
+	pos = VGet(200.0f, -8000.0f, 0.0f);
 
 
 }

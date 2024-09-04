@@ -21,6 +21,17 @@ namespace
 	constexpr int kAttackAnimIndex = 21;
 	constexpr int kAnimIndex = 3;
 
+	//移動量
+	constexpr float kSpped = 15.0f;
+
+	//初期座標
+	constexpr float kPosX = 40.0f;
+	constexpr float kPosY = -8000.0f;
+
+	//モデルのサイズ変更
+	constexpr float kExpansion = 100.0f;
+
+
 	//アニメーションの切り替えにかかるフレーム数
 	constexpr float kAnimChangeFrame = 8.0f;
 	constexpr float kAnimChangeRateSpeed = 1.0f / kAnimChangeFrame;
@@ -41,6 +52,8 @@ Player::Player():
 	angle(0.0f),
 	cameraAngle(0.0f)
 {
+	//3Dモデルの読み込み
+	modelHandle = MV1LoadModel(kModelFilename);
 }
 
 Player::~Player()
@@ -48,22 +61,22 @@ Player::~Player()
 }
 
 void Player::Init()
-{
-	//3Dモデルの読み込み
-	modelHandle = MV1LoadModel(kModelFilename);
+{	
+
+	MV1SetScale(modelHandle, VGet(kExpansion, kExpansion, kExpansion));
 
 	currentAnimNo = MV1AttachAnim(modelHandle, kIdleAnimIndex, -1, false);
 	prevAnimNo - 1;
 	animBlendRate = 1.0f;
 
 	//プレイヤーの初期位置設定
-	pos = VGet(0.0f, 0.0f, 0.0f);
+	pos = VGet(kPosX, kPosY, 0.0f);
 	attackPos = VAdd(pos, VGet(0.0f, 7.0f, 4.0f));
 
 
 }
 
-void Player::Update()
+void Player::Update(VECTOR cameraPos)
 {
 	//アニメーションの切り替え
 	if (prevAnimNo != -1)
@@ -82,6 +95,68 @@ void Player::Update()
 	//アニメーションを進める
 	bool isLoop = UpdateAnim(currentAnimNo);
 	UpdateAnim(prevAnimNo);
+	if (Pad::isPress(PAD_INPUT_RIGHT))
+	{
+		m_state = kMove;
+		m_direction = kDown;
+		pos = VAdd(pos, VGet(0.0f,
+			0.0f,
+			-kSpped));
+
+
+	}
+	if (Pad::isRelase(PAD_INPUT_RIGHT))
+	{
+		m_state = kWait;
+	}
+
+	//移動
+	if (Pad::isPress(PAD_INPUT_LEFT))
+	{
+		m_state = kMove;
+		m_direction = kUp;
+		pos = VAdd(pos, VGet(0.0f,
+			0.0f,
+			kSpped));
+
+
+	}
+	if (Pad::isRelase(PAD_INPUT_LEFT))
+	{
+		m_state = kWait;
+	}
+
+	//移動
+	if (Pad::isPress(PAD_INPUT_UP))
+	{
+		m_state = kMove;
+		m_direction = kRight;
+		pos = VAdd(pos, VGet(kSpped,
+			0.0f,
+			0.0f));
+
+
+	}
+	if (Pad::isRelase(PAD_INPUT_UP))
+	{
+		m_state = kWait;
+	}
+
+	//移動
+	if (Pad::isPress(PAD_INPUT_DOWN))
+	{
+		m_state = kMove;
+		m_direction = kLeft;
+		pos = VAdd(pos, VGet(-kSpped,
+			0.0f,
+			0.0f));
+
+
+	}
+	if (Pad::isRelase(PAD_INPUT_DOWN))
+	{
+		m_state = kWait;
+	}
 
 	if (!isAttack)
 	{
@@ -92,60 +167,60 @@ void Player::Update()
 			ChangeAnim(kAttackAnimIndex);
 
 		}
-		else
-		{
-			//アナログスティックを使って移動
-			int analogX = 0;
-			int analogZ = 0;
+	//	else
+	//	{
+	//		//アナログスティックを使って移動
+	//		int analogX = 0;
+	//		int analogZ = 0;
 
-			GetJoypadAnalogInput(&analogX, &analogZ, DX_INPUT_KEY_PAD1);
-
-
-			//アナログスティックの入力の10% ~ 80%の範囲を使用する
-
-			//ベクトルの長さが最大で1000になる
-
-			//プレイヤーの最大移動速度は 0.01f / frame
-
-			VECTOR move = VGet(analogX, 0.0f, -analogZ);	//ベクトルの長さ0~1000
-			//0.00~0.01の長さにする
-			//ベクトルの長さを取得する
-			float len = VSize(move);
-			//ベクトルの長さを0.0~1.0に割合に変換する
-			float rate = len / kAnglogInputMax;
-
-			//アナログスティック無効な範囲を除外する
-			rate = (rate - kAnalogRaneMin) / (kAnalogRaneMax - kAnalogRaneMin);
-			rate = min(rate, 1.0f);
-			rate = max(rate, 0.0f);
-
-			//速度が決定できるので移動ベクトルに反映する
-			move = VNorm(move);
-			float speed = kMaxSpeed * rate;
-			move = VScale(move, speed);
-
-			MATRIX mtx = MGetRotY(-cameraAngle - DX_PI_F / 2);
-			move = VTransform(move, mtx);
+	//		GetJoypadAnalogInput(&analogX, &analogZ, DX_INPUT_KEY_PAD1);
 
 
-			//移動方向からプレイヤーの向く方向を決定する
-			if (VSquareSize(move) > 0.0f)
-			{
-				angle = -atan2f(move.z, move.x) - DX_PI_F / 2;
-			}
+	//		//アナログスティックの入力の10% ~ 80%の範囲を使用する
 
-			pos = VAdd(pos, move);
+	//		//ベクトルの長さが最大で1000になる
 
-			if (Pad::isPress PAD_INPUT_2)
-			{
-				ChangeAnim(kRunAnimIndex);
-				move = VScale(move, 1.2f);
-				pos = VAdd(pos, move);
-			}
+	//		//プレイヤーの最大移動速度は 0.01f / frame
 
-			VECTOR attackMove = VScale(move, 15.0f);
-			attackPos = VAdd(pos, attackMove);
-		}
+	//		VECTOR move = VGet(analogX, 0.0f, -analogZ);	//ベクトルの長さ0~1000
+	//		//0.00~0.01の長さにする
+	//		//ベクトルの長さを取得する
+	//		float len = VSize(move);
+	//		//ベクトルの長さを0.0~1.0に割合に変換する
+	//		float rate = len / kAnglogInputMax;
+
+	//		//アナログスティック無効な範囲を除外する
+	//		rate = (rate - kAnalogRaneMin) / (kAnalogRaneMax - kAnalogRaneMin);
+	//		rate = min(rate, 1.0f);
+	//		rate = max(rate, 0.0f);
+
+	//		//速度が決定できるので移動ベクトルに反映する
+	//		move = VNorm(move);
+	//		float speed = kMaxSpeed * rate;
+	//		move = VScale(move, speed);
+
+	//		MATRIX mtx = MGetRotY(-cameraAngle - DX_PI_F / 2);
+	//		move = VTransform(move, mtx);
+
+
+	//		//移動方向からプレイヤーの向く方向を決定する
+	//		if (VSquareSize(move) > 0.0f)
+	//		{
+	//			angle = -atan2f(move.z, move.x) - DX_PI_F / 2;
+	//		}
+
+	//		pos = VAdd(pos, move);
+
+	//		if (Pad::isPress PAD_INPUT_2)
+	//		{
+	//			ChangeAnim(kRunAnimIndex);
+	//			move = VScale(move, 1.2f);
+	//			pos = VAdd(pos, move);
+	//		}
+
+	//		VECTOR attackMove = VScale(move, 15.0f);
+	//		attackPos = VAdd(pos, attackMove);
+	//	}
 	}
 	else
 	{
