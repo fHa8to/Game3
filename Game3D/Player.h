@@ -15,6 +15,7 @@ public:
 
 	void Animation();
 
+
 	//”¼Œa‚ÌŽæ“¾
 	float GetRadius() { return m_radius; }
 

@@ -20,6 +20,44 @@ namespace
 
 }
 
+void DrawGrid()
+{
+	for (int x = -800; x <= 800; x += 100)
+	{
+		DrawLine3D(VGet(static_cast<float>(x), 0, -800), VGet(static_cast<float>(x), 0, 800), 0xffff00);
+	}
+	for (int z = -800; z <= 800; z += 100)
+	{
+		DrawLine3D(VGet(-800, 0, static_cast<float>(z)), VGet(800, 0, static_cast<float>(z)), 0xff0000);
+	}
+
+	// X+-,Z+-‚Ì•ûŒü‚ª•ª‚©‚è‚â‚·‚¢‚æ‚¤‚É•\Ž¦‚ð’Ç‰Á‚·‚é
+	VECTOR dispPos = ConvWorldPosToScreenPos(VGet(500, 0, 0));
+	if (dispPos.z >= 0.0f && dispPos.z <= 1.0f)
+	{
+		DrawStringF(dispPos.x, dispPos.y, "X+", 0xffffff);
+	}
+
+	dispPos = ConvWorldPosToScreenPos(VGet(-500, 0, 0));
+	if (dispPos.z >= 0.0f && dispPos.z <= 1.0f)
+	{
+		DrawStringF(dispPos.x, dispPos.y, "X-", 0xffffff);
+	}
+
+	dispPos = ConvWorldPosToScreenPos(VGet(0, 0, 500));
+	if (dispPos.z >= 0.0f && dispPos.z <= 1.0f)
+	{
+		DrawStringF(dispPos.x, dispPos.y, "Z+", 0xffffff);
+	}
+
+	dispPos = ConvWorldPosToScreenPos(VGet(0, 0, -500));
+	if (dispPos.z >= 0.0f && dispPos.z <= 1.0f)
+	{
+		DrawStringF(dispPos.x, dispPos.y, "Z-", 0xffffff);
+	}
+}
+
+
 SceneGame::SceneGame()
 {
 	m_pEnemy = std::make_shared<Enemy>();
@@ -61,6 +99,9 @@ std::shared_ptr<SceneBase> SceneGame::Update()
 	m_pEnemy->Update(*m_pPlayer);
 	m_pGauge->Update();
 	m_pCamera->Update(m_playerPos);
+
+	DrawGrid();
+
 	if (Pad::IsTrigger PAD_INPUT_4)
 	{
 		return std::make_shared<SceneClear>();
@@ -81,3 +122,4 @@ void SceneGame::Draw()
 void SceneGame::End()
 {
 }
+

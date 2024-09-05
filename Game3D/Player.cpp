@@ -5,7 +5,6 @@
 #include <cmath>
 #include <iostream>
 #include <memory>
-#include <array>
 
 namespace
 {
@@ -21,14 +20,12 @@ namespace
 	constexpr int kAttackAnimIndex = 21;	//攻撃
 	constexpr int kAnimIndex = 3;
 
-	//移動量
-	constexpr float kSpped = 15.0f;
 	//走る速さ
 	constexpr float kDash = 15.0f;
 
 	//初期座標
-	constexpr float kPosX = 40.0f;
-	constexpr float kPosY = -8000.0f;
+	constexpr float kPosX = 400.0f;
+	constexpr float kPosY = 0.0f;
 
 	//モデルのサイズ変更
 	constexpr float kExpansion = 100.0f;
@@ -39,10 +36,11 @@ namespace
 	constexpr float kAnimChangeRateSpeed = 1.0f / kAnimChangeFrame;
 
 	//アナログスティックによる移動関連
-	constexpr float kMaxSpeed = 0.1f;		//プレイヤーの最大移動速度
-	constexpr float kAnalogRaneMin = 0.1f;	//アナログスティックの入力判定範囲
-	constexpr float kAnalogRaneMax = 0.8f;
-	constexpr float kAnglogInputMax = 1000.0f;	//アナログスティックの入力されるベクトルに
+	constexpr float kMaxSpeed = 5.0f;		//プレイヤーの最大移動速度
+	constexpr float kAnalogRangeMin = 0.1;	//アナログスティックの入力判定範囲
+	constexpr float kAnalogRangeMax = 0.8;
+	constexpr float kAnalogInputMax = 1000.0f;	//アナログスティックから入力されるベクトルの最大値
+
 
 }
 
@@ -52,12 +50,7 @@ Player::Player() :
 	m_prevAnimNo(-1),
 	m_animBlendRate(0.0f),
 	angle(0.0f),
-	m_cameraAngle(0.0f),
-	m_iskStandby(false),
-	m_isWalk(false),
-	m_isRun(false),
-	m_isAttack(false)
-
+	m_cameraAngle(0.0f)
 {
 	//3Dモデルの読み込み
 	modelHandle = MV1LoadModel(kModelFilename);
@@ -78,7 +71,12 @@ void Player::Init()
 
 	//プレイヤーの初期位置設定
 	m_pos = VGet(kPosX, kPosY, 0.0f);
-	m_attackPos = VAdd(m_pos, VGet(0.0f, 7.0f, 4.0f));
+
+	m_iskStandby = false;
+	m_isWalk = false;
+	m_isRun = false;
+	m_isAttack = false;
+
 
 
 }
@@ -91,7 +89,8 @@ void Player::Update(VECTOR cameraPos)
 
 	// ３Dモデルのポジション設定
 	MV1SetPosition(modelHandle, m_pos);
-	MV1SetRotationXYZ(modelHandle, VGet(0, angle, 0));
+
+
 	
 }
 
@@ -104,69 +103,47 @@ void Player::Draw()
 
 void Player::Botton(VECTOR cameraPos)
 {
-	if (Pad::IsPress(PAD_INPUT_RIGHT))
+
+	int analogX = 0;
+	int analogZ = 0;
+
+	GetJoypadAnalogInput(&analogX, &analogZ, DX_INPUT_PAD1);
+
+	//アナログスティックの入力の10% ~ 80%の範囲を使用する
+
+	//ベクトルの長さが最大で1000になる
+	//プレイヤーの最大移動速度は0.01f / frame
+
+	VECTOR move = VGet(analogX, 0.0f, -analogZ);	//ベクトルの長さは0～1000
+
+	//0.00 ~ 0.01の長さにする
+	//ベクトルの長さを取得する
+	float len = VSize(move);
+	//ベクトルの長さを0.0~1.0の割合に変換する
+	float rate = len / kAnalogInputMax;
+
+	//アナログスティック無効な範囲を除外する
+	rate = (rate - kAnalogRangeMin) / (kAnalogRangeMax - kAnalogRangeMin);
+	rate = min(rate, 1.0f);
+	rate = max(rate, 0.0f);
+
+	//速度が決定できるので移動ベクトルに反映する
+	move = VNorm(move);
+	float speed = kMaxSpeed * rate;
+	move = VScale(move, speed);
+
+	MATRIX mtx = MGetRotY(-m_cameraAngle - DX_PI_F / 2);
+	move = VTransform(move, mtx);
+
+	if (VSquareSize(move) > 0.0f)
 	{
-		m_state = kWalk;
-		m_direction = kDown;
-		m_pos = VAdd(m_pos, VGet(0.0f, 0.0f, -kSpped));
-
-
-	}
-	if (Pad::IsRelase(PAD_INPUT_RIGHT))
-	{
-		m_state = kStandby;
-	}
-
-	//移動
-	if (Pad::IsPress(PAD_INPUT_LEFT))
-	{
-		m_state = kWalk;
-		m_direction = kUp;
-		m_pos = VAdd(m_pos, VGet(0.0f, 0.0f, kSpped));
-
-
-	}
-	if (Pad::IsRelase(PAD_INPUT_LEFT))
-	{
-		m_state = kStandby;
-	}
-
-	//移動
-	if (Pad::IsPress(PAD_INPUT_UP))
-	{
-		m_state = kWalk;
-		m_direction = kRight;
-		m_pos = VAdd(m_pos, VGet(kSpped, 0.0f, 0.0f));
-
-
-	}
-	if (Pad::IsRelase(PAD_INPUT_UP))
-	{
-		m_state = kStandby;
+		angle = -atan2f(move.z, move.x) - DX_PI_F / 2;
 	}
 
-	//移動
-	if (Pad::IsPress(PAD_INPUT_DOWN))
-	{
-		m_state = kWalk;
-		m_direction = kLeft;
-		m_pos = VAdd(m_pos, VGet(-kSpped, 0.0f, 0.0f));
+	m_pos = VAdd(m_pos, move);
 
-	}
-	if (Pad::IsRelase(PAD_INPUT_DOWN))
-	{
-		m_state = kStandby;
-	}
-	if (Pad::IsTrigger(PAD_INPUT_1))
-	{
-		m_isAttack = true;
-		//m_countAButton++;
-		m_state = kAttack;
-	}
-	if (Pad::IsRelase(PAD_INPUT_1))
-	{
-		m_state = kStandby;
-	}
+
+	MV1SetRotationXYZ(modelHandle, VGet(0, angle, 0));
 
 }
 

@@ -52,7 +52,7 @@ void Enemy::Init()
 	animBlendRate = 1.0f;
 
 	//プレイヤーの初期位置設定
-	pos = VGet(200.0f, -8000.0f, 0.0f);
+	pos = VGet(0.0f, 0.0f, 10.0f);
 
 
 }
