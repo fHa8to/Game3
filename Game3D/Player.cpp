@@ -15,10 +15,10 @@ namespace
 
 
 	//アニメーション番号
-	constexpr int kIdleAnimIndex = 1;
-	constexpr int kWalkAnimIndex = 2;
-	constexpr int kRunAnimIndex = 7;
-	constexpr int kAttackAnimIndex = 21;
+	constexpr int kIdleAnimIndex = 1;		//待機
+	constexpr int kWalkAnimIndex = 2;		//歩き
+	constexpr int kRunAnimIndex = 7;		//走り
+	constexpr int kAttackAnimIndex = 21;	//攻撃
 	constexpr int kAnimIndex = 3;
 
 	//移動量
@@ -46,13 +46,18 @@ namespace
 
 }
 
-Player::Player():
+Player::Player() :
 	modelHandle(-1),
 	m_currentAnimNo(-1),
 	m_prevAnimNo(-1),
 	m_animBlendRate(0.0f),
 	angle(0.0f),
-	m_cameraAngle(0.0f)
+	m_cameraAngle(0.0f),
+	m_iskStandby(false),
+	m_isWalk(false),
+	m_isRun(false),
+	m_isAttack(false)
+
 {
 	//3Dモデルの読み込み
 	modelHandle = MV1LoadModel(kModelFilename);
@@ -80,47 +85,10 @@ void Player::Init()
 
 void Player::Update(VECTOR cameraPos)
 {
-	//アニメーションの切り替え
-	if (m_prevAnimNo != -1)
-	{
-		m_animBlendRate += kAnimChangeRateSpeed;
-		if (m_animBlendRate >= 1.0f)	m_animBlendRate = 1.0f;
-		//変更前のアニメーション100%
-		MV1SetAttachAnimBlendRate(modelHandle, m_prevAnimNo, 1.0f - m_animBlendRate);
-		//変更後のアニメーション0%
-		MV1SetAttachAnimBlendRate(modelHandle, m_currentAnimNo, m_animBlendRate);
-
-	}
-
-
-
-	//アニメーションを進める
-	bool isLoop = UpdateAnim(m_currentAnimNo);
-	UpdateAnim(m_prevAnimNo);
-	
 	Botton(cameraPos);
 
-	if (!m_isAttack)
-	{
+	Animation();
 
-		if (Pad::IsTrigger PAD_INPUT_1)
-		{
-			m_isAttack = true;
-			ChangeAnim(kAttackAnimIndex);
-
-		}
-		else
-		{
-			//攻撃アニメーションが終了したら待機アニメーションを再生する
-			if (isLoop)
-			{
-
-				m_isAttack = false;
-				ChangeAnim(kIdleAnimIndex);
-			}
-		}
-
-	}
 	// ３Dモデルのポジション設定
 	MV1SetPosition(modelHandle, m_pos);
 	MV1SetRotationXYZ(modelHandle, VGet(0, angle, 0));
@@ -138,67 +106,118 @@ void Player::Botton(VECTOR cameraPos)
 {
 	if (Pad::IsPress(PAD_INPUT_RIGHT))
 	{
-		m_state = kMove;
+		m_state = kWalk;
 		m_direction = kDown;
-		m_pos = VAdd(m_pos, VGet(0.0f,
-			0.0f,
-			-kSpped));
+		m_pos = VAdd(m_pos, VGet(0.0f, 0.0f, -kSpped));
 
 
 	}
 	if (Pad::IsRelase(PAD_INPUT_RIGHT))
 	{
-		m_state = kWait;
+		m_state = kStandby;
 	}
 
 	//移動
 	if (Pad::IsPress(PAD_INPUT_LEFT))
 	{
-		m_state = kMove;
+		m_state = kWalk;
 		m_direction = kUp;
-		m_pos = VAdd(m_pos, VGet(0.0f,
-			0.0f,
-			kSpped));
+		m_pos = VAdd(m_pos, VGet(0.0f, 0.0f, kSpped));
 
 
 	}
 	if (Pad::IsRelase(PAD_INPUT_LEFT))
 	{
-		m_state = kWait;
+		m_state = kStandby;
 	}
 
 	//移動
 	if (Pad::IsPress(PAD_INPUT_UP))
 	{
-		m_state = kMove;
+		m_state = kWalk;
 		m_direction = kRight;
-		m_pos = VAdd(m_pos, VGet(kSpped,
-			0.0f,
-			0.0f));
+		m_pos = VAdd(m_pos, VGet(kSpped, 0.0f, 0.0f));
 
 
 	}
 	if (Pad::IsRelase(PAD_INPUT_UP))
 	{
-		m_state = kWait;
+		m_state = kStandby;
 	}
 
 	//移動
 	if (Pad::IsPress(PAD_INPUT_DOWN))
 	{
-		m_state = kMove;
+		m_state = kWalk;
 		m_direction = kLeft;
-		m_pos = VAdd(m_pos, VGet(-kSpped,
-			0.0f,
-			0.0f));
-
+		m_pos = VAdd(m_pos, VGet(-kSpped, 0.0f, 0.0f));
 
 	}
 	if (Pad::IsRelase(PAD_INPUT_DOWN))
 	{
-		m_state = kWait;
+		m_state = kStandby;
+	}
+	if (Pad::IsTrigger(PAD_INPUT_1))
+	{
+		m_isAttack = true;
+		//m_countAButton++;
+		m_state = kAttack;
+	}
+	if (Pad::IsRelase(PAD_INPUT_1))
+	{
+		m_state = kStandby;
 	}
 
+}
+
+void Player::Animation()
+{
+	//アニメーションの切り替え
+	if (m_prevAnimNo != -1)
+	{
+		m_animBlendRate += kAnimChangeRateSpeed;
+		if (m_animBlendRate >= 1.0f)	m_animBlendRate = 1.0f;
+		//変更前のアニメーション100%
+		MV1SetAttachAnimBlendRate(modelHandle, m_prevAnimNo, 1.0f - m_animBlendRate);
+		//変更後のアニメーション0%
+		MV1SetAttachAnimBlendRate(modelHandle, m_currentAnimNo, m_animBlendRate);
+
+	}
+
+	//アニメーションを進める
+	bool isLoop = UpdateAnim(m_currentAnimNo);
+	UpdateAnim(m_prevAnimNo);
+
+	if (m_state == kStandby)
+	{
+		m_iskStandby = false;
+		m_isWalk = false;
+		m_isRun = false;
+		m_isAttack = false;
+
+		if (isLoop)
+		{
+			ChangeAnim(kIdleAnimIndex);
+		}
+	}
+
+	if (m_state == kWalk)
+	{
+		m_isRun = true;
+		if (m_isWalk != m_isRun)
+		{
+			m_isWalk = m_isRun;
+			if (m_isWalk)
+			{
+				ChangeAnim(kRunAnimIndex);
+			}
+		}
+	}
+
+	if (m_state == kAttack)
+	{
+
+	}
 }
 
 

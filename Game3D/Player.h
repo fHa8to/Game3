@@ -13,6 +13,8 @@ public:
 
 	void Botton(VECTOR cameraPos);
 
+	void Animation();
+
 	//半径の取得
 	float GetRadius() { return m_radius; }
 
@@ -34,8 +36,11 @@ private:
 private:
 	enum  state
 	{
-		kWait,			//待機中
-		kMove,			//動いている
+		kStandby,		//待機中
+		kWalk,			//歩く
+		kRun,			//走る
+		kAttack			//攻撃
+
 	};
 
 	//プレイヤーがどちらを向いているか
@@ -83,7 +88,18 @@ private:
 	//カメラ情報
 	float m_cameraAngle;
 
-	int m_isAttack;
+
+	//動いているか
+	bool m_iskStandby;
+
+	//歩いているか
+	bool m_isWalk;
+
+	//走っているか
+	bool m_isRun;
+
+	//攻撃しているか
+	bool m_isAttack;
 
 
 };
