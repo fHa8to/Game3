@@ -102,7 +102,7 @@ std::shared_ptr<SceneBase> SceneGame::Update()
 
 	DrawGrid();
 
-	if (Pad::IsTrigger PAD_INPUT_4)
+	if (Pad::IsTrigger PAD_INPUT_10)
 	{
 		return std::make_shared<SceneClear>();
 

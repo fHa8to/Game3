@@ -72,18 +72,13 @@ void Player::Init()
 	//プレイヤーの初期位置設定
 	m_pos = VGet(kPosX, kPosY, 0.0f);
 
-	m_iskStandby = false;
-	m_isWalk = false;
-	m_isRun = false;
 	m_isAttack = false;
-
-
 
 }
 
 void Player::Update(VECTOR cameraPos)
 {
-	Botton(cameraPos);
+	MoveUpdate(cameraPos);
 
 	Animation();
 
@@ -101,9 +96,9 @@ void Player::Draw()
 
 }
 
-void Player::Botton(VECTOR cameraPos)
-{
 
+void Player::MoveUpdate(VECTOR cameraPos)
+{
 	int analogX = 0;
 	int analogZ = 0;
 
@@ -145,7 +140,15 @@ void Player::Botton(VECTOR cameraPos)
 
 	MV1SetRotationXYZ(modelHandle, VGet(0, angle, 0));
 
+	if (Pad::IsPress(PAD_INPUT_2))
+	{
+		move = VScale(move, 1.5f);
+
+		m_pos = VAdd(m_pos, move);
+	}
+
 }
+
 
 void Player::Animation()
 {
@@ -165,36 +168,24 @@ void Player::Animation()
 	bool isLoop = UpdateAnim(m_currentAnimNo);
 	UpdateAnim(m_prevAnimNo);
 
-	if (m_state == kStandby)
+	if (!m_isAttack)
 	{
-		m_iskStandby = false;
-		m_isWalk = false;
-		m_isRun = false;
-		m_isAttack = false;
-
+		if (Pad::IsTrigger PAD_INPUT_1)
+		{
+			m_isAttack = true;
+			ChangeAnim(kAttackAnimIndex);
+		}
+	}
+	else
+	{
 		if (isLoop)
 		{
+			m_isAttack = false;
 			ChangeAnim(kIdleAnimIndex);
 		}
-	}
-
-	if (m_state == kWalk)
-	{
-		m_isRun = true;
-		if (m_isWalk != m_isRun)
-		{
-			m_isWalk = m_isRun;
-			if (m_isWalk)
-			{
-				ChangeAnim(kRunAnimIndex);
-			}
-		}
-	}
-
-	if (m_state == kAttack)
-	{
 
 	}
+	
 }
 
 

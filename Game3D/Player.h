@@ -11,7 +11,9 @@ public:
 	void Update(VECTOR cameraPos);
 	void Draw();
 
-	void Botton(VECTOR cameraPos);
+
+	void MoveUpdate(VECTOR cameraPos);
+	void Botton();
 
 	void Animation();
 
