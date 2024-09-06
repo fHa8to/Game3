@@ -18,6 +18,9 @@ public:
 	//プレイヤーの攻撃と敵の当たり判定
 	bool AttackSphereHitFlag(std::shared_ptr<Player> pPlayer);
 
+	float GetRadius() { return m_radius; }
+	VECTOR GetPos() { return m_pos; }
+
 private:
 
 	int modelHandle;		//モデルハンドル
@@ -31,7 +34,7 @@ private:
 	float m_radius;
 
 	//表示情報
-	VECTOR pos;
+	VECTOR m_pos;
 	float angle;
 
 	int isAttack;

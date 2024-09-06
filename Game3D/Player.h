@@ -13,9 +13,8 @@ public:
 
 
 	void MoveUpdate(VECTOR cameraPos);
-	void Botton();
 
-	void Animation();
+	void Animation(VECTOR cameraPos);
 
 
 	//半径の取得
@@ -24,8 +23,8 @@ public:
 
 	//プレイヤーの座標を取得	
 	const VECTOR& GetPos() const { return m_pos; }
-	void Set(const VECTOR pos) { m_pos = pos; }
-		 
+	void SetPos(const VECTOR pos) { m_pos = pos; }
+		
 
 
 
@@ -46,14 +45,6 @@ private:
 
 	};
 
-	//プレイヤーがどちらを向いているか
-	enum direction
-	{
-		kRight,
-		kLeft,
-		kUp,
-		kDown
-	};
 
 private:
 	int		modelHandle;	//モデルハンドル
@@ -83,7 +74,7 @@ private:
 	//カメラの位置
 	VECTOR m_cameraPos;
 
-	float angle;
+	float angle = 90.0f * DX_PI_F / 180.0f;
 
 	//当たり判定の半径
 	float m_radius;

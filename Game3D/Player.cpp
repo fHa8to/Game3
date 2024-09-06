@@ -20,6 +20,8 @@ namespace
 	constexpr int kAttackAnimIndex = 21;	//攻撃
 	constexpr int kAnimIndex = 3;
 
+	
+
 	//走る速さ
 	constexpr float kDash = 15.0f;
 
@@ -49,8 +51,11 @@ Player::Player() :
 	m_currentAnimNo(-1),
 	m_prevAnimNo(-1),
 	m_animBlendRate(0.0f),
+	m_isAttack(false),
+	m_pos(VGet(0.0f, 0.0f, 0.0f)),
 	angle(0.0f),
-	m_cameraAngle(0.0f)
+	m_cameraAngle(0.0f),
+	m_radius(100.0f)
 {
 	//3Dモデルの読み込み
 	modelHandle = MV1LoadModel(kModelFilename);
@@ -63,24 +68,28 @@ Player::~Player()
 void Player::Init()
 {	
 
-	MV1SetScale(modelHandle, VGet(kExpansion, kExpansion, kExpansion));
-
 	m_currentAnimNo = MV1AttachAnim(modelHandle, kIdleAnimIndex, -1, false);
 	m_prevAnimNo - 1;
 	m_animBlendRate = 1.0f;
 
-	//プレイヤーの初期位置設定
-	m_pos = VGet(kPosX, kPosY, 0.0f);
 
+
+
+
+	MV1SetPosition(modelHandle, m_pos);
+	MV1SetScale(modelHandle, VGet(kExpansion, kExpansion, kExpansion));
 	m_isAttack = false;
 
 }
 
 void Player::Update(VECTOR cameraPos)
 {
-	MoveUpdate(cameraPos);
+	//MoveUpdate(cameraPos);
 
-	Animation();
+	Animation(cameraPos);
+
+	MV1SetPosition(modelHandle, m_pos);
+	MV1SetRotationXYZ(modelHandle, VGet(0, angle, 0));
 
 	// ３Dモデルのポジション設定
 	MV1SetPosition(modelHandle, m_pos);
@@ -93,6 +102,10 @@ void Player::Draw()
 {
 	// ３Ｄモデルの描画
 	MV1DrawModel(modelHandle);
+
+	DrawSphere3D(VAdd(m_pos, VGet(0, 100, 0)), m_radius, 8, 0xffffff, 0xffffff, false);
+	DrawSphere3D(VAdd(m_attackPos, VGet(0, 8, 0)), m_radius, 8, 0xffffff, 0xff00ff, true);
+
 
 }
 
@@ -133,12 +146,13 @@ void Player::MoveUpdate(VECTOR cameraPos)
 	if (VSquareSize(move) > 0.0f)
 	{
 		angle = -atan2f(move.z, move.x) - DX_PI_F / 2;
+			ChangeAnim(kWalkAnimIndex);
 	}
+
 
 	m_pos = VAdd(m_pos, move);
 
 
-	MV1SetRotationXYZ(modelHandle, VGet(0, angle, 0));
 
 	if (Pad::IsPress(PAD_INPUT_2))
 	{
@@ -147,10 +161,11 @@ void Player::MoveUpdate(VECTOR cameraPos)
 		m_pos = VAdd(m_pos, move);
 	}
 
+
 }
 
 
-void Player::Animation()
+void Player::Animation(VECTOR cameraPos)
 {
 	//アニメーションの切り替え
 	if (m_prevAnimNo != -1)
@@ -174,6 +189,11 @@ void Player::Animation()
 		{
 			m_isAttack = true;
 			ChangeAnim(kAttackAnimIndex);
+		}
+		else
+		{
+			MoveUpdate(cameraPos);
+
 		}
 	}
 	else

@@ -8,9 +8,6 @@
 
 namespace
 {
-	//操作説明の位置
-	constexpr int kOperationX = 1110;
-	constexpr int kOperationY = 100;
 
 	//フェードイン、フェードアウトの数値
 	constexpr int kFadeValue = 255;
@@ -58,31 +55,29 @@ void DrawGrid()
 }
 
 
-SceneGame::SceneGame()
+SceneGame::SceneGame():
+	m_isPlayerHit(false),
+	m_isAttackHit(false)
+
 {
 	m_pEnemy = std::make_shared<Enemy>();
 	m_pGauge = std::make_shared<Gauge>();
+	m_pPlayer = std::make_shared<Player>();
+	m_pCamera = std::make_shared<Camera>();
 
 }
 
 SceneGame::~SceneGame()
 {
-	delete m_pPlayer;
-	m_pPlayer = nullptr;
 
-
-	delete m_pCamera;
-	m_pCamera = nullptr;
 
 }
 
 void SceneGame::Init()
 {
-	m_pPlayer = new Player;
 	m_pPlayer->Init();
 	m_pEnemy->Init();
 	m_pGauge->Init();
-	m_pCamera = new Camera;
 	m_pCamera->Init();
 
 
@@ -90,17 +85,44 @@ void SceneGame::Init()
 
 std::shared_ptr<SceneBase> SceneGame::Update()
 {
+	
+	
 	m_cameraPos = m_pCamera->GetCameraPos();
 
 	m_pPlayer->Update(m_cameraPos);
 
 	m_playerPos = m_pPlayer->GetPos();
 
+	m_isPlayerHit = m_pEnemy->SphereHitFlag(m_pPlayer);
+
+
 	m_pEnemy->Update(*m_pPlayer);
 	m_pGauge->Update();
 	m_pCamera->Update(m_playerPos);
 
-	DrawGrid();
+
+
+
+
+	VECTOR toEnemy = VSub(m_pEnemy->GetPos(), m_pPlayer->GetPos());
+	float length = VSize(toEnemy);
+
+	//プレイヤーと敵が当たった場合
+	if (m_isPlayerHit)
+	{
+
+		VECTOR posVec;
+		VECTOR moveVec;
+
+
+		//エネミーのベクトル座標からプレイヤーのベクトル座標を引いたベクトル
+		posVec = VSub(m_pEnemy->GetPos(), m_pPlayer->GetPos());
+
+		moveVec = VScale(posVec, length - (m_pPlayer->GetRadius() + m_pEnemy->GetRadius()));
+		m_pPlayer->SetPos(VAdd(m_pPlayer->GetPos(), moveVec));
+
+
+	}
 
 	if (Pad::IsTrigger PAD_INPUT_10)
 	{
@@ -112,10 +134,13 @@ std::shared_ptr<SceneBase> SceneGame::Update()
 
 void SceneGame::Draw()
 {
+	DrawGrid();
 	m_pPlayer->Draw();
 	m_pEnemy->Draw();
 	m_pGauge->Draw();
 	m_pCamera->Draw();
+
+	
 	DrawString(8, 8, "SceneGame", GetColor(255, 255, 255));
 }
 

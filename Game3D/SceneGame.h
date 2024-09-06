@@ -25,8 +25,8 @@ public:
 private:
 	std::shared_ptr<Enemy> m_pEnemy;
 	std::shared_ptr<Gauge> m_pGauge;
-	Player* m_pPlayer;
-	Camera* m_pCamera;
+	std::shared_ptr<Player> m_pPlayer;
+	std::shared_ptr<Camera> m_pCamera;
 
 
 private:
@@ -53,6 +53,12 @@ private:
 
 	//ƒJƒƒ‰‚ÌÀ•W
 	VECTOR m_cameraPos;
+
+	//“–‚½‚è”»’è
+	bool m_isPlayerHit;
+	bool m_isAttackHit;
+	bool m_isGimmickHit;
+
 
 
 };

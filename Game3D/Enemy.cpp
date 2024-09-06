@@ -24,7 +24,11 @@ namespace
 	constexpr float kAnimChangeRateSpeed = 1.0f / kAnimChangeFrame;
 
 	//当たり判定
-	constexpr float kAddPosY = 8.0f;
+	constexpr float kAddm_posY = 1.0f;
+
+	//角度
+	constexpr float kAngle = 270.0f * DX_PI_F / 180.0f;
+
 }
 
 Enemy::Enemy():
@@ -32,7 +36,8 @@ Enemy::Enemy():
 	currentAnimNo(-1),
 	prevAnimNo(-1),
 	animBlendRate(0.0f),
-	angle(0.0f)
+	angle(0.0f),
+	m_radius(100.0f)
 
 {
 	//3Dモデルの読み込み
@@ -51,18 +56,21 @@ void Enemy::Init()
 	prevAnimNo - 1;
 	animBlendRate = 1.0f;
 
-	//プレイヤーの初期位置設定
-	pos = VGet(0.0f, 0.0f, 10.0f);
+	//エネミーの初期位置設定
+	m_pos = VGet(-5.0f, 0.0f, 0.0f);
 
 
 }
 
 void Enemy::Update(Player& player)
 {	
-	VECTOR enemyToPlayer = VSub(player.GetPos(), pos);
+
+	MV1SetRotationXYZ(modelHandle, VGet(0, kAngle, 0));
+
+	VECTOR enemyToPlayer = VSub(player.GetPos(), m_pos);
 
 	// ３Dモデルのポジション設定
-	MV1SetPosition(modelHandle, pos);
+	MV1SetPosition(modelHandle, m_pos);
 }
 
 void Enemy::Draw()
@@ -72,8 +80,8 @@ void Enemy::Draw()
 
 #ifdef _DEBUG
 
-	DrawSphere3D(VAdd(pos, VGet(0, 8, 0)), m_radius, 8, 0xffffff, 0xffffff, false);
-	DrawFormatString(0, 32, 0xffffff, "Enemy(x:%f,y:%f,z:%f)", pos.x, pos.y, pos.z);
+	DrawSphere3D(VAdd(m_pos, VGet(0, 100, 0)), m_radius, 8, 0xffffff, 0xffffff, false);
+	DrawFormatString(0, 32, 0xffffff, "Enemy(x:%f,y:%f,z:%f)", m_pos.x, m_pos.y, m_pos.z);
 
 #endif
 
@@ -82,10 +90,10 @@ void Enemy::Draw()
 //球の当たり判定
 bool Enemy::SphereHitFlag(std::shared_ptr<Player> pPlayer)
 {
-	float delX = (pos.x - pPlayer->GetPos().x) * (pos.x - pPlayer->GetPos().x);
-	float delY = ((pos.y + kAddPosY) - (pPlayer->GetPos().y + kAddPosY)) *
-		((pos.y + kAddPosY) - (pPlayer->GetPos().y + kAddPosY));
-	float delZ = (pos.z - pPlayer->GetPos().z) * (pos.z - pPlayer->GetPos().z);
+	float delX = (m_pos.x - pPlayer->GetPos().x) * (m_pos.x - pPlayer->GetPos().x);
+	float delY = ((m_pos.y + kAddm_posY) - (pPlayer->GetPos().y + kAddm_posY)) *
+		((m_pos.y + kAddm_posY) - (pPlayer->GetPos().y + kAddm_posY));
+	float delZ = (m_pos.z - pPlayer->GetPos().z) * (m_pos.z - pPlayer->GetPos().z);
 
 	//球と球の距離
 	float Distance = sqrt(delX + delY + delZ);
@@ -93,6 +101,7 @@ bool Enemy::SphereHitFlag(std::shared_ptr<Player> pPlayer)
 	//球と球の距離がプレイヤとエネミーの半径よりも小さい場合
 	if (Distance < m_radius + pPlayer->GetRadius())
 	{
+
 		return true;
 	}
 
