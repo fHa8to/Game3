@@ -65,7 +65,7 @@ void SceneTitle::Init()
 
 	//モデルのサイズ調整
 	MV1SetScale(modelHandle, VGet(kExpansion, kExpansion, kExpansion));
-	MV1SetScale(modelHandle2, VGet(1, 1, 1));
+	MV1SetScale(modelHandle2, VGet(500, 50, 50));
 
 	//アニメーションの初期設定
 	m_currentAnimNo = MV1AttachAnim(modelHandle, kStandByAnimIndex, -1, true);
@@ -87,6 +87,7 @@ std::shared_ptr<SceneBase> SceneTitle::Update()
 
 	//モデルの位置更新
 	MV1SetPosition(modelHandle, m_pos);
+	MV1SetPosition(modelHandle2, VGet(kPosX, kPosY - 100, kPosZ));
 
 
 	if(isSceneEnd && fadeAlpha >= kFadeValue)

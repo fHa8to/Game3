@@ -17,7 +17,7 @@ public:
 	//ƒvƒŒƒCƒ„[‚Æ“G‚Ì“–‚½‚è”»’è
 	bool SphereHitFlag(std::shared_ptr<Player> pPlayer);
 	//UŒ‚‚Æ“G‚Ì“–‚½‚è”»’è
-	//bool SphereHitFlag2(std::shared_ptr<Player> pPlayer);
+	bool SphereHitFlag2(std::shared_ptr<Player> pPlayer);
 
 
 

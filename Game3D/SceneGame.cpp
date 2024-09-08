@@ -63,6 +63,7 @@ void DrawGrid()
 SceneGame::SceneGame():
 	m_isPlayerHit(false),
 	m_isEnemyHit(false),
+	m_isMenu(false),
 	m_isAttackHit(false),
 	m_pos(VGet(0.0f, -300.0f, 0.0f))
 {
@@ -100,7 +101,6 @@ void SceneGame::Init()
 std::shared_ptr<SceneBase> SceneGame::Update()
 {
 	
-	Pad::Update();
 
 	int pTargetValut = playerHp * P_DRAW_SIZE;
 
@@ -123,7 +123,7 @@ std::shared_ptr<SceneBase> SceneGame::Update()
 
 	m_isPlayerHit = m_pEnemy->SphereHitFlag(m_pPlayer);
 
-	//m_isEnemyHit = m_pEnemy->SphereHitFlag2(m_pPlayer);
+	m_isEnemyHit = m_pEnemy->SphereHitFlag2(m_pPlayer);
 
 
 	m_pEnemy->Update(*m_pPlayer);
@@ -156,19 +156,19 @@ std::shared_ptr<SceneBase> SceneGame::Update()
 
 	}
 
-	//if (m_isEnemyHit)
-	//{
-	//	VECTOR posVec2;
-	//	VECTOR moveVec2;
+	if (Pad::IsTrigger(PAD_INPUT_3) &&m_isEnemyHit)
+	{
+		VECTOR posVec2;
+		VECTOR moveVec2;
 
-	//	//エネミーのベクトル座標からプレイヤーのベクトル座標を引いたベクトル
-	//	posVec2 = VSub(m_pEnemy->GetPos(), m_pPlayer->GetPos());
+		//エネミーのベクトル座標からプレイヤーのベクトル座標を引いたベクトル
+		posVec2 = VSub(m_pEnemy->GetPos(), m_pPlayer->GetPos());
 
-	//	moveVec2 = VScale(posVec2, length - (m_pPlayer->GetRadius() + m_pEnemy->GetRadius()));
-	//	m_pPlayer->SetPos(VAdd(m_pPlayer->GetPos(), moveVec2));
+		moveVec2 = VScale(posVec2, - (m_pPlayer->GetRadius() + m_pEnemy->GetRadius()));
+		m_pPlayer->SetPos(VAdd(m_pPlayer->GetPos(), moveVec2));
 
-	//	enemyHp -= 1;
-	//}
+		enemyHp -= 1;
+	}
 
 
 	//プレイヤーのHPがゼロになったら

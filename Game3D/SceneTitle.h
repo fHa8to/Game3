@@ -29,7 +29,7 @@ private:
 
 	//ƒ‚ƒfƒ‹
 	int modelHandle;
-	//int modelHandle2;
+	int modelHandle2;
 
 	int handle;
 

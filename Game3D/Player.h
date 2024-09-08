@@ -19,7 +19,6 @@ public:
 	//半径の取得
 	float GetRadius() { return m_radius; }
 
-	float GetModel() { return modelHandle; }
 
 
 	//プレイヤーの座標を取得	

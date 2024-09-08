@@ -12,7 +12,6 @@
 class Camera;
 class Player;
 class Enemy;
-class EnemyManager;
 
 class SceneGame : public SceneBase
 {
@@ -71,6 +70,9 @@ private:
 	int playerDrawValue;
 	int enemyHp;
 	int enemyDrawValue;
+
+	//ƒƒjƒ…[
+	bool m_isMenu;
 
 	VECTOR m_pos;
 
