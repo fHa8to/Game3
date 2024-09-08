@@ -9,7 +9,10 @@ namespace
 	const char* const kModelFilename = "data/model/Knight.mv1";
 
 	//モデルのサイズ変更
-	constexpr float kExpansion = 100.0f;
+	constexpr float kExpansion = 10.0f;
+
+	//敵の速さ
+	constexpr float kSpeed = 0.5f;
 
 
 	//アニメーション番号
@@ -24,7 +27,7 @@ namespace
 	constexpr float kAnimChangeRateSpeed = 1.0f / kAnimChangeFrame;
 
 	//当たり判定
-	constexpr float kAddm_posY = 1.0f;
+	constexpr float kAddposY = 10.0f;
 
 	//角度
 	constexpr float kAngle = 270.0f * DX_PI_F / 180.0f;
@@ -37,9 +40,11 @@ Enemy::Enemy():
 	prevAnimNo(-1),
 	animBlendRate(0.0f),
 	angle(0.0f),
-	m_radius(100.0f)
+	m_pos(VGet(0,0,0)),
+	m_radius(6.0f)
 
 {
+	m_pPlayer = std::make_shared<Player>();
 	//3Dモデルの読み込み
 	modelHandle = MV1LoadModel(kModelFilename);
 }
@@ -50,14 +55,14 @@ Enemy::~Enemy()
 
 void Enemy::Init()
 {
-	MV1SetScale(modelHandle, VGet(kExpansion, kExpansion, kExpansion));
+	m_pos = VGet(-100.0f, 0.0f, 0.0f);
 
 	currentAnimNo = MV1AttachAnim(modelHandle, kIdleAnimIndex, -1, false);
 	prevAnimNo - 1;
 	animBlendRate = 1.0f;
 
 	//エネミーの初期位置設定
-	m_pos = VGet(-5.0f, 0.0f, 0.0f);
+	MV1SetScale(modelHandle, VGet(kExpansion, kExpansion, kExpansion));
 
 
 }
@@ -65,9 +70,32 @@ void Enemy::Init()
 void Enemy::Update(Player& player)
 {	
 
-	MV1SetRotationXYZ(modelHandle, VGet(0, kAngle, 0));
+	VECTOR playerPos = m_pPlayer->GetPos();
 
-	VECTOR enemyToPlayer = VSub(player.GetPos(), m_pos);
+	VECTOR toTarget = VSub(playerPos, m_pos);
+
+
+
+	toTarget = VNorm(toTarget);
+	m_distance.x = toTarget.x * kSpeed;
+	m_distance.y = toTarget.y * kSpeed;
+	m_distance.z = toTarget.z * kSpeed;
+
+	m_pos = VAdd(m_pos, m_distance);
+
+	if (m_distance.x <= 0.0f)
+	{
+
+	}
+
+
+	VECTOR SubVector = VSub(playerPos, m_pos);
+
+		// atan2 を使用して角度を取得
+	float Angle = atan2(SubVector.x, SubVector.z);
+
+	MV1SetRotationXYZ(modelHandle, VGet(0.0f, Angle + DX_PI_F, 0.0f));
+
 
 	// ３Dモデルのポジション設定
 	MV1SetPosition(modelHandle, m_pos);
@@ -80,7 +108,7 @@ void Enemy::Draw()
 
 #ifdef _DEBUG
 
-	DrawSphere3D(VAdd(m_pos, VGet(0, 100, 0)), m_radius, 8, 0xffffff, 0xffffff, false);
+	DrawSphere3D(VAdd(m_pos, VGet(0, 8, 0)), m_radius, 8, 0xffffff, 0xffffff, false);
 	DrawFormatString(0, 32, 0xffffff, "Enemy(x:%f,y:%f,z:%f)", m_pos.x, m_pos.y, m_pos.z);
 
 #endif
@@ -91,24 +119,43 @@ void Enemy::Draw()
 bool Enemy::SphereHitFlag(std::shared_ptr<Player> pPlayer)
 {
 	float delX = (m_pos.x - pPlayer->GetPos().x) * (m_pos.x - pPlayer->GetPos().x);
-	float delY = ((m_pos.y + kAddm_posY) - (pPlayer->GetPos().y + kAddm_posY)) *
-		((m_pos.y + kAddm_posY) - (pPlayer->GetPos().y + kAddm_posY));
-	float delZ = (m_pos.z - pPlayer->GetPos().z) * (m_pos.z - pPlayer->GetPos().z);
+	float delY = ((m_pos.y + kAddposY) - (pPlayer->GetPos().y + kAddposY)) *
+		((m_pos.y + kAddposY) - (pPlayer->GetPos().y + kAddposY));
+	float delZ = (m_pos.z - pPlayer->GetPos().z ) * (m_pos.z - pPlayer->GetPos().z );
 
 	//球と球の距離
 	float Distance = sqrt(delX + delY + delZ);
 
-	//球と球の距離がプレイヤとエネミーの半径よりも小さい場合
+	//球と球の距離が剣とエネミーの半径よりも小さい場合
 	if (Distance < m_radius + pPlayer->GetRadius())
 	{
 
 		return true;
 	}
 
+
 	return false;
 }
 
-bool Enemy::AttackSphereHitFlag(std::shared_ptr<Player> pPlayer)
-{
-	return false;
-}
+
+//bool Enemy::SphereHitFlag2(std::shared_ptr<Player> pPlayer)
+//{
+//	float delX = (m_pos.x - pPlayer->GetPos().x + 4) * (m_pos.x - pPlayer->GetPos().x + 4);
+//	float delY = ((m_pos.y + kAddposY) - (pPlayer->GetPos().y + kAddposY)) *
+//		((m_pos.y + kAddposY) - (pPlayer->GetPos().y + kAddposY));
+//	float delZ = (m_pos.z - pPlayer->GetPos().z + 4) * (m_pos.z - pPlayer->GetPos().z + 4);
+//
+//	//球と球の距離
+//	float Distance = sqrt(delX + delY + delZ);
+//
+//	//球と球の距離が剣とエネミーの半径よりも小さい場合
+//	if (Distance < m_radius + pPlayer->GetRadius())
+//	{
+//
+//		return true;
+//	}
+//
+//
+//	return false;
+//}
+

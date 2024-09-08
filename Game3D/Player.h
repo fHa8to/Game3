@@ -1,6 +1,7 @@
 #pragma once
 #include "DxLib.h"
 
+
 class Player
 {
 public:
@@ -12,37 +13,41 @@ public:
 	void Draw();
 
 
-	void MoveUpdate(VECTOR cameraPos);
 
-	void Animation(VECTOR cameraPos);
 
 
 	//半径の取得
 	float GetRadius() { return m_radius; }
 
+	float GetModel() { return modelHandle; }
+
 
 	//プレイヤーの座標を取得	
-	const VECTOR& GetPos() const { return m_pos; }
+	const VECTOR GetPos() const { return m_pos; }
 	void SetPos(const VECTOR pos) { m_pos = pos; }
 		
+	const int& GetHp() const { return m_hp; }
+	void SetHp(const int hp) { m_hp = hp; }
 
 
 
 private:
+
 
 	bool UpdateAnim(int attachNo);
+
 	void ChangeAnim(int animIndex);
-	
 
+	//ステージ外に出ないようにする処理
+	void StageProcess();
 
-private:
 	enum  state
 	{
-		kStandby,		//待機中
-		kWalk,			//歩く
-		kRun,			//走る
-		kAttack			//攻撃
-
+		kWait,			//待機中
+		kMove,			//動いている
+		kAttack,		//攻撃中
+		kAerialSlash,	//空中斬り中
+		kAttackMagic	//魔法攻撃中
 	};
 
 
@@ -67,6 +72,17 @@ private:
 	int m_countXButton;
 
 
+	//動いているかを保持する
+	bool m_isMove;
+
+
+
+	bool m_isAttacking;
+
+
+	//HP
+	int m_hp;
+
 
 	//表示情報
 	VECTOR m_pos;
@@ -74,7 +90,7 @@ private:
 	//カメラの位置
 	VECTOR m_cameraPos;
 
-	float angle = 90.0f * DX_PI_F / 180.0f;
+	float angle;
 
 	//当たり判定の半径
 	float m_radius;

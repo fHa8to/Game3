@@ -7,20 +7,20 @@
 namespace
 {
 	//カメラの描画範囲
-	constexpr float kMinimumDrawingrange = 100.0f;
+	constexpr float kMinimumDrawingrange = 50.0f;
 	constexpr float kMaximumDrawingrange =5000.0f;
 
 	//カメラの座標
-	constexpr float kCameraPosY = 500.0f;
+	constexpr float kCameraPosY = 100.0f;
 
 	// 旋回速度
 	constexpr float kAngleSpeed = 0.05f;	
 
 	//注視点の座標
-	constexpr float kCameraTargetY = 100.0f;
+	constexpr float kCameraTargetY = 20.0f;
 
 	//カメラの距離
-	constexpr float kCameraDist = 1000.0f;
+	constexpr float kCameraDist = 100.0f;
 	//constexpr float kCameraHeight = 100;
 
 

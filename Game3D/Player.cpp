@@ -1,10 +1,7 @@
 #include "Player.h"
-#include "DxLib.h"
 #include "Enemy.h"
 #include "Pad.h"
 #include <cmath>
-#include <iostream>
-#include <memory>
 
 namespace
 {
@@ -17,20 +14,28 @@ namespace
 	constexpr int kIdleAnimIndex = 1;		//待機
 	constexpr int kWalkAnimIndex = 2;		//歩き
 	constexpr int kRunAnimIndex = 7;		//走り
-	constexpr int kAttackAnimIndex = 21;	//攻撃
+	constexpr int kAttackAnimIndex = 30;	//攻撃
 	constexpr int kAnimIndex = 3;
 
 	
 
 	//走る速さ
-	constexpr float kDash = 15.0f;
+	constexpr float kDash = 10.0f;
 
 	//初期座標
 	constexpr float kPosX = 400.0f;
 	constexpr float kPosY = 0.0f;
 
 	//モデルのサイズ変更
-	constexpr float kExpansion = 100.0f;
+	constexpr float kExpansion = 10.0f;
+
+	//最大まですすめるところ
+	constexpr float kMaxZ = 100.0f;
+
+	constexpr float kMaxX = 100.0f;
+
+	//当たり判定
+	constexpr float kAddposY = 10.0f;
 
 
 	//アニメーションの切り替えにかかるフレーム数
@@ -38,24 +43,29 @@ namespace
 	constexpr float kAnimChangeRateSpeed = 1.0f / kAnimChangeFrame;
 
 	//アナログスティックによる移動関連
-	constexpr float kMaxSpeed = 5.0f;		//プレイヤーの最大移動速度
+	constexpr float kMaxSpeed = 0.5f;		//プレイヤーの最大移動速度
 	constexpr float kAnalogRangeMin = 0.1;	//アナログスティックの入力判定範囲
 	constexpr float kAnalogRangeMax = 0.8;
 	constexpr float kAnalogInputMax = 1000.0f;	//アナログスティックから入力されるベクトルの最大値
 
+		//回転量
+	constexpr float kRotateRight = 270.0f * DX_PI_F / 180.0f;
+	constexpr float kRotateLeft = 90.0f * DX_PI_F / 180.0f;
+	constexpr float kRotateUp = 180.0f * DX_PI_F / 180.0f;
+	constexpr float kRotateDown = 0.0f;
 
 }
 
-Player::Player() :
+Player::Player():
 	modelHandle(-1),
 	m_currentAnimNo(-1),
 	m_prevAnimNo(-1),
 	m_animBlendRate(0.0f),
-	m_isAttack(false),
 	m_pos(VGet(0.0f, 0.0f, 0.0f)),
 	angle(0.0f),
+	m_isAttack(false),
 	m_cameraAngle(0.0f),
-	m_radius(100.0f)
+	m_radius(6.0f)
 {
 	//3Dモデルの読み込み
 	modelHandle = MV1LoadModel(kModelFilename);
@@ -68,6 +78,11 @@ Player::~Player()
 void Player::Init()
 {	
 
+	m_pos = VGet(10.0f, 0.0f, 0.0f);
+
+	MV1SetScale(modelHandle, VGet(kExpansion, kExpansion, kExpansion));
+
+	//アニメーションの初期設定
 	m_currentAnimNo = MV1AttachAnim(modelHandle, kIdleAnimIndex, -1, false);
 	m_prevAnimNo - 1;
 	m_animBlendRate = 1.0f;
@@ -77,95 +92,12 @@ void Player::Init()
 
 
 	MV1SetPosition(modelHandle, m_pos);
-	MV1SetScale(modelHandle, VGet(kExpansion, kExpansion, kExpansion));
+
 	m_isAttack = false;
 
 }
 
 void Player::Update(VECTOR cameraPos)
-{
-	//MoveUpdate(cameraPos);
-
-	Animation(cameraPos);
-
-	MV1SetPosition(modelHandle, m_pos);
-	MV1SetRotationXYZ(modelHandle, VGet(0, angle, 0));
-
-	// ３Dモデルのポジション設定
-	MV1SetPosition(modelHandle, m_pos);
-
-
-	
-}
-
-void Player::Draw()
-{
-	// ３Ｄモデルの描画
-	MV1DrawModel(modelHandle);
-
-	DrawSphere3D(VAdd(m_pos, VGet(0, 100, 0)), m_radius, 8, 0xffffff, 0xffffff, false);
-	DrawSphere3D(VAdd(m_attackPos, VGet(0, 8, 0)), m_radius, 8, 0xffffff, 0xff00ff, true);
-
-
-}
-
-
-void Player::MoveUpdate(VECTOR cameraPos)
-{
-	int analogX = 0;
-	int analogZ = 0;
-
-	GetJoypadAnalogInput(&analogX, &analogZ, DX_INPUT_PAD1);
-
-	//アナログスティックの入力の10% ~ 80%の範囲を使用する
-
-	//ベクトルの長さが最大で1000になる
-	//プレイヤーの最大移動速度は0.01f / frame
-
-	VECTOR move = VGet(analogX, 0.0f, -analogZ);	//ベクトルの長さは0～1000
-
-	//0.00 ~ 0.01の長さにする
-	//ベクトルの長さを取得する
-	float len = VSize(move);
-	//ベクトルの長さを0.0~1.0の割合に変換する
-	float rate = len / kAnalogInputMax;
-
-	//アナログスティック無効な範囲を除外する
-	rate = (rate - kAnalogRangeMin) / (kAnalogRangeMax - kAnalogRangeMin);
-	rate = min(rate, 1.0f);
-	rate = max(rate, 0.0f);
-
-	//速度が決定できるので移動ベクトルに反映する
-	move = VNorm(move);
-	float speed = kMaxSpeed * rate;
-	move = VScale(move, speed);
-
-	MATRIX mtx = MGetRotY(-m_cameraAngle - DX_PI_F / 2);
-	move = VTransform(move, mtx);
-
-	if (VSquareSize(move) > 0.0f)
-	{
-		angle = -atan2f(move.z, move.x) - DX_PI_F / 2;
-			ChangeAnim(kWalkAnimIndex);
-	}
-
-
-	m_pos = VAdd(m_pos, move);
-
-
-
-	if (Pad::IsPress(PAD_INPUT_2))
-	{
-		move = VScale(move, 1.5f);
-
-		m_pos = VAdd(m_pos, move);
-	}
-
-
-}
-
-
-void Player::Animation(VECTOR cameraPos)
 {
 	//アニメーションの切り替え
 	if (m_prevAnimNo != -1)
@@ -183,21 +115,137 @@ void Player::Animation(VECTOR cameraPos)
 	bool isLoop = UpdateAnim(m_currentAnimNo);
 	UpdateAnim(m_prevAnimNo);
 
+	StageProcess();
+
+
+
+	//ボタンを押したら攻撃アニメーションを再生する
 	if (!m_isAttack)
 	{
-		if (Pad::IsTrigger PAD_INPUT_1)
+
+		//攻撃
+		if (Pad::IsTrigger PAD_INPUT_3)
 		{
+
 			m_isAttack = true;
 			ChangeAnim(kAttackAnimIndex);
-		}
-		else
-		{
-			MoveUpdate(cameraPos);
 
+		}	
+		else
+		{	
+			int analogX = 0;
+			int analogZ = 0;
+
+			GetJoypadAnalogInput(&analogX, &analogZ, DX_INPUT_PAD1);
+
+
+			//アナログスティックの入力の10% ~ 80%の範囲を使用する
+
+			//ベクトルの長さが最大で1000になる
+			//プレイヤーの最大移動速度は0.01f / frame
+
+			VECTOR move = VGet(analogX, 0.0f, -analogZ);	//ベクトルの長さは0～1000
+
+			//0.00 ~ 0.01の長さにする
+			//ベクトルの長さを取得する
+			float len = VSize(move);
+			//ベクトルの長さを0.0~1.0の割合に変換する
+			float rate = len / kAnalogInputMax;
+
+			//アナログスティック無効な範囲を除外する
+			rate = (rate - kAnalogRangeMin) / (kAnalogRangeMax - kAnalogRangeMin);
+			rate = min(rate, 1.0f);
+			rate = max(rate, 0.0f);
+
+			//速度が決定できるので移動ベクトルに反映する
+			move = VNorm(move);
+			float speed = kMaxSpeed * rate;
+			move = VScale(move, speed);
+
+			MATRIX mtx = MGetRotY(-m_cameraAngle - DX_PI_F / 2);
+			move = VTransform(move, mtx);
+
+			if (VSquareSize(move) > 0.0f)
+			{
+				angle = -atan2f(move.z, move.x) - DX_PI_F / 2;
+			}
+
+			m_pos = VAdd(m_pos, move);
+
+			if (Pad::IsTrigger(PAD_INPUT_2))
+			{
+				ChangeAnim(kRunAnimIndex);
+
+				move = VScale(move, speed + kDash);
+
+				m_pos = VAdd(m_pos, move);
+			}
+			if (Pad::IsRelase(PAD_INPUT_2))
+			{
+				ChangeAnim(kIdleAnimIndex);
+			}
+
+
+	if (Pad::IsTrigger(PAD_INPUT_RIGHT))
+	{
+		
+		ChangeAnim(kWalkAnimIndex);
+
+		MV1SetRotationXYZ(modelHandle, VGet(0, kRotateDown, 0));
+
+	}
+	if (Pad::IsRelase(PAD_INPUT_RIGHT))
+	{
+		ChangeAnim(kIdleAnimIndex);
+
+	}
+
+	//移動
+	if (Pad::IsTrigger(PAD_INPUT_LEFT))
+	{
+
+		ChangeAnim(kWalkAnimIndex);
+
+		MV1SetRotationXYZ(modelHandle, VGet(0, kRotateUp, 0));
+
+	}
+	if (Pad::IsRelase(PAD_INPUT_LEFT))
+	{
+		ChangeAnim(kIdleAnimIndex);
+
+	}
+
+	//移動
+	if (Pad::IsTrigger(PAD_INPUT_UP))
+	{
+		ChangeAnim(kWalkAnimIndex);
+
+		MV1SetRotationXYZ(modelHandle, VGet(0, kRotateRight, 0));
+	}
+	if (Pad::IsRelase(PAD_INPUT_UP))
+	{
+		ChangeAnim(kIdleAnimIndex);
+
+	}
+
+	//移動
+	if (Pad::IsTrigger(PAD_INPUT_DOWN))
+	{
+		ChangeAnim(kWalkAnimIndex);
+
+		MV1SetRotationXYZ(modelHandle, VGet(0, kRotateLeft, 0));
+
+	}
+	if (Pad::IsRelase(PAD_INPUT_DOWN))
+	{
+		ChangeAnim(kIdleAnimIndex);
+
+	}
 		}
 	}
 	else
 	{
+		//攻撃アニメーションが終了したら待機アニメーションを再生する
 		if (isLoop)
 		{
 			m_isAttack = false;
@@ -205,8 +253,25 @@ void Player::Animation(VECTOR cameraPos)
 		}
 
 	}
+
+
+	MV1SetPosition(modelHandle, m_pos);
+	MV1SetRotationXYZ(modelHandle, VGet(0, angle, 0));
 	
 }
+
+void Player::Draw()
+{
+	// ３Ｄモデルの描画
+	MV1DrawModel(modelHandle);
+
+
+	//DrawSphere3D(VAdd(m_pos, VGet(0, 8, 0)), m_radius, 8, 0xffffff, 0xffffff, false);
+	//DrawSphere3D(VAdd(m_attackPos, VGet(0, 8, 0)), m_radius, 8, 0xffffff, 0xff00ff, true);
+
+
+}
+
 
 
 
@@ -217,11 +282,13 @@ bool Player::UpdateAnim(int attachNo)
 
 	//アニメーションを進行させる
 	float now = MV1GetAttachAnimTime(modelHandle, attachNo);	//現在の再生カウントを取得
-	now += 0.5f;	//アニメーション進める
 
 	//現在再生中のアニメーションの総カウントを取得
 	float total = MV1GetAttachAnimTotalTime(modelHandle, attachNo);
 	bool isLoop = false;
+	//アニメーション進める
+	now += 0.5f;
+
 	if (now >= total)
 	{
 		now -= total;
@@ -256,3 +323,29 @@ void Player::ChangeAnim(int animIndex)
 	//変更後のアニメーション0%
 	MV1SetAttachAnimBlendRate(modelHandle, m_currentAnimNo, m_animBlendRate);
 }
+
+
+//ステージ外に出ないようにする
+void Player::StageProcess()
+{
+
+	//ステージ外にでないようにする
+	if (m_pos.z > kMaxZ)
+	{
+		m_pos.z = kMaxZ;
+	}
+	else if (m_pos.z < -kMaxZ)
+	{
+		m_pos.z = -kMaxZ;
+	}
+
+	if (m_pos.x < -kMaxX)
+	{
+		m_pos.x = -kMaxX;
+	}
+	else if (m_pos.x > kMaxX)
+	{
+		m_pos.x = kMaxX;
+	}
+}
+

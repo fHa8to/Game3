@@ -2,8 +2,8 @@
 #include "DxLib.h"
 #include "Camera.h"
 #include "SceneClear.h"
+#include "SceneOver.h"
 #include "Game.h"
-#include "Gauge.h"
 #include "Pad.h"
 
 namespace
@@ -15,17 +15,22 @@ namespace
 	//フェード値の増減
 	constexpr int kFadeUpDown = 8;
 
+	//モデルのファイル名
+	const char* const kModelFilename = "data/model/tileHigh_forest.mv1";
+
+	//モデルのサイズ変更
+	constexpr float kExpansion = 150.0f;
 }
 
 void DrawGrid()
 {
-	for (int x = -800; x <= 800; x += 100)
+	for (int x = -80; x <= 80; x += 10)
 	{
-		DrawLine3D(VGet(static_cast<float>(x), 0, -800), VGet(static_cast<float>(x), 0, 800), 0xffff00);
+		DrawLine3D(VGet(static_cast<float>(x), 0, -80), VGet(static_cast<float>(x), 0, 80), 0xffff00);
 	}
-	for (int z = -800; z <= 800; z += 100)
+	for (int z = -80; z <= 80; z += 10)
 	{
-		DrawLine3D(VGet(-800, 0, static_cast<float>(z)), VGet(800, 0, static_cast<float>(z)), 0xff0000);
+		DrawLine3D(VGet(-80, 0, static_cast<float>(z)), VGet(80, 0, static_cast<float>(z)), 0xff0000);
 	}
 
 	// X+-,Z+-の方向が分かりやすいように表示を追加する
@@ -57,36 +62,59 @@ void DrawGrid()
 
 SceneGame::SceneGame():
 	m_isPlayerHit(false),
-	m_isAttackHit(false)
-
+	m_isEnemyHit(false),
+	m_isAttackHit(false),
+	m_pos(VGet(0.0f, -300.0f, 0.0f))
 {
 	m_pEnemy = std::make_shared<Enemy>();
-	m_pGauge = std::make_shared<Gauge>();
 	m_pPlayer = std::make_shared<Player>();
 	m_pCamera = std::make_shared<Camera>();
+	//3Dモデルの読み込み
+	modelHandle = MV1LoadModel(kModelFilename);
+
+
 
 }
 
 SceneGame::~SceneGame()
 {
 
-
 }
 
 void SceneGame::Init()
 {
+	MV1SetScale(modelHandle, VGet(kExpansion, kExpansion, kExpansion));
 	m_pPlayer->Init();
 	m_pEnemy->Init();
-	m_pGauge->Init();
 	m_pCamera->Init();
 
+
+	playerHp = P_HP_MAX;
+	playerDrawValue = playerHp * P_DRAW_SIZE;
+
+	enemyHp = E_HP_MAX;
+	enemyDrawValue = enemyHp * E_DRAW_SIZE;
 
 }
 
 std::shared_ptr<SceneBase> SceneGame::Update()
 {
 	
-	
+	Pad::Update();
+
+	int pTargetValut = playerHp * P_DRAW_SIZE;
+
+	if (playerDrawValue > pTargetValut)
+	{
+		playerDrawValue--;
+	}
+	int eTargetValut = enemyHp * E_DRAW_SIZE;
+
+	if (enemyDrawValue > eTargetValut)
+	{
+		enemyDrawValue--;
+	}
+
 	m_cameraPos = m_pCamera->GetCameraPos();
 
 	m_pPlayer->Update(m_cameraPos);
@@ -95,16 +123,19 @@ std::shared_ptr<SceneBase> SceneGame::Update()
 
 	m_isPlayerHit = m_pEnemy->SphereHitFlag(m_pPlayer);
 
+	//m_isEnemyHit = m_pEnemy->SphereHitFlag2(m_pPlayer);
+
 
 	m_pEnemy->Update(*m_pPlayer);
-	m_pGauge->Update();
 	m_pCamera->Update(m_playerPos);
 
-
+	MV1SetPosition(modelHandle, m_pos);
 
 
 
 	VECTOR toEnemy = VSub(m_pEnemy->GetPos(), m_pPlayer->GetPos());
+
+
 	float length = VSize(toEnemy);
 
 	//プレイヤーと敵が当たった場合
@@ -121,27 +152,63 @@ std::shared_ptr<SceneBase> SceneGame::Update()
 		moveVec = VScale(posVec, length - (m_pPlayer->GetRadius() + m_pEnemy->GetRadius()));
 		m_pPlayer->SetPos(VAdd(m_pPlayer->GetPos(), moveVec));
 
+		playerHp -= 1;
 
 	}
 
-	if (Pad::IsTrigger PAD_INPUT_10)
+	//if (m_isEnemyHit)
+	//{
+	//	VECTOR posVec2;
+	//	VECTOR moveVec2;
+
+	//	//エネミーのベクトル座標からプレイヤーのベクトル座標を引いたベクトル
+	//	posVec2 = VSub(m_pEnemy->GetPos(), m_pPlayer->GetPos());
+
+	//	moveVec2 = VScale(posVec2, length - (m_pPlayer->GetRadius() + m_pEnemy->GetRadius()));
+	//	m_pPlayer->SetPos(VAdd(m_pPlayer->GetPos(), moveVec2));
+
+	//	enemyHp -= 1;
+	//}
+
+
+	//プレイヤーのHPがゼロになったら
+	if (playerHp <= 0)
+	{
+		{
+			return std::make_shared<SceneOver>();
+		}
+	}
+
+	if (enemyHp <= 0)
 	{
 		return std::make_shared<SceneClear>();
 
 	}
 	return shared_from_this();	//自身のshared_ptrを返す
+
+
 }
 
 void SceneGame::Draw()
 {
-	DrawGrid();
+	// ３Ｄモデルの描画
+	MV1DrawModel(modelHandle);
+	//DrawGrid();
 	m_pPlayer->Draw();
 	m_pEnemy->Draw();
-	m_pGauge->Draw();
 	m_pCamera->Draw();
 
-	
-	DrawString(8, 8, "SceneGame", GetColor(255, 255, 255));
+	int playerColor = GetColor(0, 255, 0);
+	DrawFormatString(20, 600, GetColor(0, 255, 255), "HP ", playerDrawValue);
+	DrawFillBox(50, 600, 100 + playerHp * P_DRAW_SIZE, 616, playerColor);
+	DrawLineBox(50, 600, 350, 616, GetColor(255, 255, 255));
+	int enemyColor = GetColor(255, 0, 0);
+	DrawFormatString(20, 50, GetColor(0, 255, 255), "HP ", enemyDrawValue);
+	DrawFillBox(50, 50, 100 + enemyHp * E_DRAW_SIZE, 66, enemyColor);
+	DrawLineBox(50, 50, 350, 66, GetColor(255, 255, 255));
+
+
+	//DrawString(8, 8, "SceneGame", GetColor(255, 255, 255));
 }
 
 void SceneGame::End()
