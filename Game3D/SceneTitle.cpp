@@ -15,11 +15,11 @@ namespace
 
 
 	//モデルの初期位置
-	constexpr float kPosX = 1000.0f;
+	constexpr float kPosX = 300.0f;
 
-	constexpr float kPosY = 250.0f;
+	constexpr float kPosY = 100.0f;
 
-	constexpr float kPosZ = -40.0f;
+	constexpr float kPosZ = 0.0f;
 
 	//モデルのサイズ変更
 	constexpr float kExpansion = 100.0f;
@@ -38,10 +38,24 @@ namespace
 	//フェード値の増減
 	constexpr int kFadeUpDown = 8;
 
+	//カメラ情報
+	constexpr float kCameraX = 0.0f;
+	constexpr float kCameraY = 150.0f;
+	constexpr float kCameraZ = -600.0f;
+
+
+
+
 }
 
-SceneTitle::SceneTitle()
+SceneTitle::SceneTitle():
+	m_pos(VGet(0.0f, 0.0f, 0.0f)),
+	m_cameraPos(VGet(0.0f, 0.0f, 0.0f)),
+	m_handle(false),
+	modelHandle(false),
+	m_state(kWait)
 {
+
 }
 
 SceneTitle::~SceneTitle()
@@ -50,6 +64,7 @@ SceneTitle::~SceneTitle()
 
 
 	MV1DeleteModel(modelHandle);
+	MV1DeleteModel(modelHandle2);
 
 }
 
@@ -65,12 +80,20 @@ void SceneTitle::Init()
 
 	//モデルのサイズ調整
 	MV1SetScale(modelHandle, VGet(kExpansion, kExpansion, kExpansion));
-	MV1SetScale(modelHandle2, VGet(500, 50, 50));
+	MV1SetScale(modelHandle2, VGet(2000, 50, 400));
 
 	//アニメーションの初期設定
 	m_currentAnimNo = MV1AttachAnim(modelHandle, kStandByAnimIndex, -1, true);
 
+	SetFontSize(kFontSize);
+
 	m_pos = VGet(kPosX, kPosY, kPosZ);
+
+
+	m_cameraPos.z = kCameraZ;
+	m_cameraPos.y = kCameraY;
+	m_cameraPos.x = kCameraX;;
+	SetCameraPositionAndTarget_UpVecY(m_cameraPos, VGet(100, 200, 10));
 
 
 }
@@ -85,16 +108,16 @@ std::shared_ptr<SceneBase> SceneTitle::Update()
 
 	}
 
-	//モデルの位置更新
-	MV1SetPosition(modelHandle, m_pos);
-	MV1SetPosition(modelHandle2, VGet(kPosX, kPosY - 100, kPosZ));
-
-
 	if(isSceneEnd && fadeAlpha >= kFadeValue)
 	{
 		return std::make_shared<SceneGame>();
 
 	}
+
+	//モデルの位置更新
+	MV1SetPosition(modelHandle, m_pos);
+	MV1SetPosition(modelHandle2, VGet(kPosX - 100, kPosY - 100, kPosZ));
+	
 
 
 	//フレームイン、アウト
@@ -125,9 +148,16 @@ void SceneTitle::Draw()
 
 	MV1DrawModel(modelHandle);
 	MV1DrawModel(modelHandle2);
-	DrawString(kFontPosX, kFontPosY, "Aボタンを押してスタート", 0x000000);
+	DrawString(kFontPosX, kFontPosY, "Aボタンで開始", 0x000000);
 
-	//DrawString(0, 0, "SceneTitle", GetColor(255, 255, 255));
+#ifdef _DEBUG
+
+	DrawString(0, 0, "SceneTitle", GetColor(255, 255, 255));
+
+#endif
+
+	
+
 }
 
 void SceneTitle::End()
@@ -145,8 +175,13 @@ void SceneTitle::Animation()
 		MV1SetAttachAnimBlendRate(modelHandle, m_currentAnimNo, m_animBlendRate);
 	}
 	bool isLoop = UpdateAnim(m_currentAnimNo);
-	UpdateAnim(m_prevAnimNo);
-
+	if (m_state == kWait)
+	{
+		if (isLoop)
+		{
+			UpdateAnim(m_prevAnimNo);
+		}
+	}
 		ChangeAnim(kStandByAnimIndex);
 }
 

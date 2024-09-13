@@ -1,7 +1,7 @@
 #include "SceneClear.h"
 #include "DxLib.h"
-#include "Game.h"
 #include "SceneTitle.h"
+#include "Game.h"
 #include "Pad.h"
 
 namespace
@@ -15,11 +15,12 @@ namespace
 
 
 	//モデルの初期位置
-	constexpr float kPosX = 1000.0f;
+	//モデルの初期位置
+	constexpr float kPosX = 300.0f;
 
-	constexpr float kPosY = 250.0f;
+	constexpr float kPosY = 100.0f;
 
-	constexpr float kPosZ = -40.0f;
+	constexpr float kPosZ = 0.0f;
 
 	//モデルのサイズ変更
 	constexpr float kExpansion = 100.0f;
@@ -37,10 +38,16 @@ namespace
 
 	//フェード値の増減
 	constexpr int kFadeUpDown = 8;
+	//カメラ情報
+	constexpr float kCameraX = 0.0f;
+	constexpr float kCameraY = 150.0f;
+	constexpr float kCameraZ = -600.0f;
 
 }
 
-SceneClear::SceneClear()
+SceneClear::SceneClear():
+	m_pos(VGet(0.0f, 0.0f, 0.0f)),
+	m_cameraPos(VGet(0.0f, 0.0f, 0.0f))
 {
 }
 
@@ -56,6 +63,8 @@ void SceneClear::Init()
 {
 	isSceneEnd = false;
 
+	fadeAlpha = kFadeValue;
+
 	m_handle = LoadGraph("data/data/GameClear.png");
 
 	modelHandle = MV1LoadModel("data/model/knight.mv1");
@@ -64,13 +73,17 @@ void SceneClear::Init()
 
 	//モデルのサイズ調整
 	MV1SetScale(modelHandle, VGet(kExpansion, kExpansion, kExpansion));
-	MV1SetScale(modelHandle2, VGet(500, 50, 50));
+	MV1SetScale(modelHandle2, VGet(2000, 50, 400));
 
 	//アニメーションの初期設定
 	m_currentAnimNo = MV1AttachAnim(modelHandle, kStandByAnimIndex, -1, true);
 
 	m_pos = VGet(kPosX, kPosY, kPosZ);
 
+	m_cameraPos.z = kCameraZ;
+	m_cameraPos.y = kCameraY;
+	m_cameraPos.x = kCameraX;;
+	SetCameraPositionAndTarget_UpVecY(m_cameraPos, VGet(100, 200, 10));
 }
 
 std::shared_ptr<SceneBase>  SceneClear::Update()
@@ -82,17 +95,16 @@ std::shared_ptr<SceneBase>  SceneClear::Update()
 
 	}
 
+	//モデルの位置更新
+	MV1SetPosition(modelHandle, m_pos);
+	MV1SetPosition(modelHandle2, VGet(kPosX - 100, kPosY - 100, kPosZ));
 
 
 	if (isSceneEnd && fadeAlpha >= kFadeValue)
 	{
 		return std::make_shared<SceneTitle>();
 	}
-	return shared_from_this();	//自身のshared_ptrを返す
 
-	//モデルの位置更新
-	MV1SetPosition(modelHandle, m_pos);
-	MV1SetPosition(modelHandle2, VGet(kPosX, kPosY - 100, kPosZ));
 
 	//フレームイン、アウト
 	if (isSceneEnd)
@@ -119,12 +131,24 @@ std::shared_ptr<SceneBase>  SceneClear::Update()
 
 void SceneClear::Draw()
 {
+
+	DrawGraph(0, 0, m_handle, true);
+
+	MV1DrawModel(modelHandle);
+	MV1DrawModel(modelHandle2);
 	DrawString(8, 8, "SceneClear", GetColor(255, 255, 255));
+
+	//フェードの描画
+	SetDrawBlendMode(DX_BLENDMODE_ALPHA, fadeAlpha); //半透明で表示
+	DrawBox(0, 0, Game::kScreenWidth, Game::kScreenHeight, GetColor(0, 0, 0), true);
+	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0); //不透明に戻しておく
+
 
 }
 
 void SceneClear::End()
 {
+
 }
 
 void SceneClear::Animation()
@@ -141,8 +165,10 @@ void SceneClear::Animation()
 	bool isLoop = UpdateAnim(m_currentAnimNo);
 	UpdateAnim(m_prevAnimNo);
 
-	ChangeAnim(kStandByAnimIndex);
-
+	if (isLoop)
+	{
+		ChangeAnim(kStandByAnimIndex);
+	}
 }
 
 bool SceneClear::UpdateAnim(int attachNo)

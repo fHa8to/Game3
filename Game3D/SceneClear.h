@@ -24,12 +24,19 @@ private:
 
 	//アニメーションの変更
 	void ChangeAnim(int animIndex);
-
+private:
+	enum state
+	{
+		kWait,			//待機中
+	};
 private:
 
 	//モデル
 	int modelHandle;
 	int modelHandle2;
+
+	//状態
+	int m_state;
 
 	int handle;
 
@@ -48,6 +55,8 @@ private:
 	//モデルの座標
 	VECTOR m_pos;
 
+	//カメラの座標
+	VECTOR m_cameraPos;
 
 };
 

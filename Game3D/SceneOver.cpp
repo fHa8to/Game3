@@ -1,8 +1,9 @@
 #include "SceneOver.h"
 #include "DxLib.h"
-#include "Game.h"
 #include "SceneTitle.h"
+#include "Game.h"
 #include "Pad.h"
+#include "Player.h"
 
 namespace
 {
@@ -15,11 +16,11 @@ namespace
 
 
 	//モデルの初期位置
-	constexpr float kPosX = 1000.0f;
+	constexpr float kPosX = 300.0f;
 
-	constexpr float kPosY = 250.0f;
+	constexpr float kPosY = 100.0f;
 
-	constexpr float kPosZ = -40.0f;
+	constexpr float kPosZ = 0.0f;
 
 	//モデルのサイズ変更
 	constexpr float kExpansion = 100.0f;
@@ -38,10 +39,20 @@ namespace
 	//フェード値の増減
 	constexpr int kFadeUpDown = 8;
 
+	//カメラ情報
+	constexpr float kCameraX = 0.0f;
+	constexpr float kCameraY = 150.0f;
+	constexpr float kCameraZ = -600.0f;
+
 }
 
 
-SceneOver::SceneOver()
+SceneOver::SceneOver():
+	m_handle(false),
+	modelHandle(false),
+	m_pos(VGet(0.0f,0.0f,0.0f)),
+	m_cameraPos(VGet(0.0f, 0.0f, 0.0f))
+
 {
 }
 
@@ -51,6 +62,7 @@ SceneOver::~SceneOver()
 
 
 	MV1DeleteModel(modelHandle);
+	MV1DeleteModel(modelHandle2);
 
 }
 
@@ -58,7 +70,7 @@ void SceneOver::Init()
 {
 	isSceneEnd = false;
 
-	m_handle = LoadGraph("data/data/GameOverd.png");
+	m_handle = LoadGraph("data/data/GameOver.png");
 
 	modelHandle = MV1LoadModel("data/model/knight.mv1");
 
@@ -66,17 +78,25 @@ void SceneOver::Init()
 
 	//モデルのサイズ調整
 	MV1SetScale(modelHandle, VGet(kExpansion, kExpansion, kExpansion));
-	MV1SetScale(modelHandle2, VGet(500, 50, 50));
+	MV1SetScale(modelHandle2, VGet(2000, 50, 400));
 
 	//アニメーションの初期設定
 	m_currentAnimNo = MV1AttachAnim(modelHandle, kStandByAnimIndex, -1, true);
 
+	SetFontSize(kFontSize);
+
 	m_pos = VGet(kPosX, kPosY, kPosZ);
+
+	m_cameraPos.z = kCameraZ;
+	m_cameraPos.y = kCameraY;
+	m_cameraPos.x = kCameraX;;
+	SetCameraPositionAndTarget_UpVecY(m_cameraPos, VGet(100, 200, 10));
 
 }
 
 std::shared_ptr<SceneBase> SceneOver::Update()
 {
+
 	if (Pad::IsTrigger(PAD_INPUT_A))	// パッドの1ボタンorキーボードのZキー
 	{
 
@@ -84,17 +104,16 @@ std::shared_ptr<SceneBase> SceneOver::Update()
 
 	}
 
-
-
 	if (isSceneEnd && fadeAlpha >= kFadeValue)
 	{
 		return std::make_shared<SceneTitle>();
+
 	}
-	return shared_from_this();	//自身のshared_ptrを返す
 
 	//モデルの位置更新
 	MV1SetPosition(modelHandle, m_pos);
-	MV1SetPosition(modelHandle2, VGet(kPosX, kPosY - 100, kPosZ));
+	MV1SetPosition(modelHandle2, VGet(kPosX - 100, kPosY - 100, kPosZ));
+
 
 	//フレームイン、アウト
 	if (isSceneEnd)
@@ -114,12 +133,25 @@ std::shared_ptr<SceneBase> SceneOver::Update()
 		}
 	}
 
-	return shared_from_this();
 
+
+	return shared_from_this();
 }
 
 void SceneOver::Draw()
 {
+	DrawGraph(0, 0, m_handle, true);
+
+	MV1DrawModel(modelHandle);
+	MV1DrawModel(modelHandle2);
+
+#ifdef _DEBUG
+
+	DrawString(8, 8, "SceneOver", GetColor(255, 255, 255));
+
+#endif
+
+
 }
 
 void SceneOver::End()
@@ -138,12 +170,11 @@ void SceneOver::Animation()
 		MV1SetAttachAnimBlendRate(modelHandle, m_currentAnimNo, m_animBlendRate);
 	}
 	bool isLoop = UpdateAnim(m_currentAnimNo);
-	UpdateAnim(m_prevAnimNo);
-
+	if (isLoop)
+	{
+		UpdateAnim(m_prevAnimNo);
+	}
 	ChangeAnim(kStandByAnimIndex);
-
-
-
 }
 
 bool SceneOver::UpdateAnim(int attachNo)
@@ -166,6 +197,7 @@ bool SceneOver::UpdateAnim(int attachNo)
 		now -= total;
 		isLoop = true;
 	}
+
 	//進めた時間に設定
 	MV1SetAttachAnimTime(modelHandle, attachNo, now);
 	return isLoop;
@@ -178,6 +210,7 @@ void SceneOver::ChangeAnim(int animIndex)
 	{
 		MV1DetachAnim(modelHandle, m_prevAnimNo);
 	}
+
 	//現在再生中の待機アニメーションは変更前のアニメーション扱いに
 	m_prevAnimNo = m_currentAnimNo;
 
@@ -191,5 +224,4 @@ void SceneOver::ChangeAnim(int animIndex)
 	MV1SetAttachAnimBlendRate(modelHandle, m_prevAnimNo, 1.0f - m_animBlendRate);
 	//変更後のアニメーション0%
 	MV1SetAttachAnimBlendRate(modelHandle, m_currentAnimNo, m_animBlendRate);
-
 }

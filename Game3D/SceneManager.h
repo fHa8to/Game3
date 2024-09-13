@@ -12,7 +12,6 @@ public:
 	virtual ~SceneManager();
 
 	void Init();
-
 	void Update();
 	void Draw();
 	void End();

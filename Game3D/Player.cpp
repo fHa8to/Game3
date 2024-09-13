@@ -20,7 +20,7 @@ namespace
 	
 
 	//走る速さ
-	constexpr float kDash = 10.0f;
+	constexpr float kDash = 15.0f;
 
 	//初期座標
 	constexpr float kPosX = 400.0f;
@@ -30,9 +30,8 @@ namespace
 	constexpr float kExpansion = 10.0f;
 
 	//最大まですすめるところ
-	constexpr float kMaxZ = 100.0f;
-
 	constexpr float kMaxX = 100.0f;
+	constexpr float kMaxZ = 100.0f;
 
 	//当たり判定
 	constexpr float kAddposY = 10.0f;
@@ -61,7 +60,7 @@ Player::Player():
 	m_currentAnimNo(-1),
 	m_prevAnimNo(-1),
 	m_animBlendRate(0.0f),
-	m_pos(VGet(0.0f, 0.0f, 0.0f)),
+	m_pos(),
 	angle(0.0f),
 	m_isAttack(false),
 	m_cameraAngle(0.0f),
@@ -78,7 +77,6 @@ Player::~Player()
 void Player::Init()
 {	
 
-	m_pos = VGet(10.0f, 0.0f, 0.0f);
 
 	MV1SetScale(modelHandle, VGet(kExpansion, kExpansion, kExpansion));
 
@@ -87,11 +85,10 @@ void Player::Init()
 	m_prevAnimNo - 1;
 	m_animBlendRate = 1.0f;
 
+	m_pos = VGet(10.0f, 0.0f, 0.0f);
 
 
-
-
-	MV1SetPosition(modelHandle, m_pos);
+	//MV1SetPosition(modelHandle, m_pos);
 
 	m_isAttack = false;
 
@@ -99,6 +96,7 @@ void Player::Init()
 
 void Player::Update(VECTOR cameraPos)
 {
+	
 	//アニメーションの切り替え
 	if (m_prevAnimNo != -1)
 	{
@@ -124,7 +122,7 @@ void Player::Update(VECTOR cameraPos)
 	{
 
 		//攻撃
-		if (Pad::IsTrigger PAD_INPUT_3)
+		if (Pad::IsTrigger PAD_INPUT_1)
 		{
 
 			m_isAttack = true;
@@ -185,62 +183,67 @@ void Player::Update(VECTOR cameraPos)
 				ChangeAnim(kIdleAnimIndex);
 			}
 
+			//移動
+			if (Pad::IsTrigger(PAD_INPUT_RIGHT))
+			{
+				m_direction = kDown;
+				ChangeAnim(kWalkAnimIndex);
 
-	if (Pad::IsTrigger(PAD_INPUT_RIGHT))
-	{
-		
-		ChangeAnim(kWalkAnimIndex);
+				MV1SetRotationXYZ(modelHandle, VGet(0, kRotateDown, 0));
 
-		MV1SetRotationXYZ(modelHandle, VGet(0, kRotateDown, 0));
+			}
+			if (Pad::IsRelase(PAD_INPUT_RIGHT))
+			{
+				ChangeAnim(kIdleAnimIndex);
 
-	}
-	if (Pad::IsRelase(PAD_INPUT_RIGHT))
-	{
-		ChangeAnim(kIdleAnimIndex);
+			}
 
-	}
+			//移動
+			if (Pad::IsTrigger(PAD_INPUT_LEFT))
+			{
+				m_direction = kUp;
 
-	//移動
-	if (Pad::IsTrigger(PAD_INPUT_LEFT))
-	{
+				ChangeAnim(kWalkAnimIndex);
 
-		ChangeAnim(kWalkAnimIndex);
+				MV1SetRotationXYZ(modelHandle, VGet(0, kRotateUp, 0));
 
-		MV1SetRotationXYZ(modelHandle, VGet(0, kRotateUp, 0));
+			}
+			if (Pad::IsRelase(PAD_INPUT_LEFT))
+			{
+				ChangeAnim(kIdleAnimIndex);
 
-	}
-	if (Pad::IsRelase(PAD_INPUT_LEFT))
-	{
-		ChangeAnim(kIdleAnimIndex);
+			}
 
-	}
+			//移動
+			if (Pad::IsTrigger(PAD_INPUT_UP))
+			{
+				m_direction = kRight;
 
-	//移動
-	if (Pad::IsTrigger(PAD_INPUT_UP))
-	{
-		ChangeAnim(kWalkAnimIndex);
+				ChangeAnim(kWalkAnimIndex);
 
-		MV1SetRotationXYZ(modelHandle, VGet(0, kRotateRight, 0));
-	}
-	if (Pad::IsRelase(PAD_INPUT_UP))
-	{
-		ChangeAnim(kIdleAnimIndex);
+				MV1SetRotationXYZ(modelHandle, VGet(0, kRotateRight, 0));
+			}
+			if (Pad::IsRelase(PAD_INPUT_UP))
+			{
+				ChangeAnim(kIdleAnimIndex);
 
-	}
+			}
 
-	//移動
-	if (Pad::IsTrigger(PAD_INPUT_DOWN))
-	{
-		ChangeAnim(kWalkAnimIndex);
+			//移動
+			if (Pad::IsTrigger(PAD_INPUT_DOWN))
+			{
+				m_direction = kLeft;
 
-		MV1SetRotationXYZ(modelHandle, VGet(0, kRotateLeft, 0));
+				ChangeAnim(kWalkAnimIndex);
 
-	}
-	if (Pad::IsRelase(PAD_INPUT_DOWN))
-	{
-		ChangeAnim(kIdleAnimIndex);
+				MV1SetRotationXYZ(modelHandle, VGet(0, kRotateLeft, 0));
 
-	}
+			}
+			if (Pad::IsRelase(PAD_INPUT_DOWN))
+			{
+				ChangeAnim(kIdleAnimIndex);
+
+			}
 		}
 	}
 	else
@@ -250,6 +253,7 @@ void Player::Update(VECTOR cameraPos)
 		{
 			m_isAttack = false;
 			ChangeAnim(kIdleAnimIndex);
+
 		}
 
 	}
@@ -349,3 +353,52 @@ void Player::StageProcess()
 	}
 }
 
+bool Player::SphereHitFlag(std::shared_ptr<Enemy> pEnemy)
+{
+
+	float delX;
+	float delY;
+	float delZ;
+
+	if (m_direction == kDown)
+	{
+		delX = (m_pos.x - pEnemy->GetPos().x) * (m_pos.x - pEnemy->GetPos().x);
+		delY = ((m_pos.y + kAddposY) - (pEnemy->GetPos().y + kAddposY)) *
+			((m_pos.y + kAddposY) - (pEnemy->GetPos().y + kAddposY));
+		delZ = ((m_pos.z + 10)- pEnemy->GetPos().z) * ((m_pos.z + 10) - pEnemy->GetPos().z);
+	}
+	if (m_direction == kUp)
+	{
+		delX = (m_pos.x - pEnemy->GetPos().x) * (m_pos.x - pEnemy->GetPos().x);
+		delY = ((m_pos.y + kAddposY) - (pEnemy->GetPos().y + kAddposY)) *
+			((m_pos.y + kAddposY) - (pEnemy->GetPos().y + kAddposY));
+		delZ = ((m_pos.z - 10) - pEnemy->GetPos().z) * ((m_pos.z - 10) - pEnemy->GetPos().z);
+	}
+	if (m_direction == kRight)
+	{
+		delX = ((m_pos.x + 10) - pEnemy->GetPos().x) * ((m_pos.x + 10) - pEnemy->GetPos().x);
+		delY = ((m_pos.y + kAddposY) - (pEnemy->GetPos().y + kAddposY)) *
+			((m_pos.y + kAddposY) - (pEnemy->GetPos().y + kAddposY));
+		delZ = (m_pos.z - pEnemy->GetPos().z) * (m_pos.z - pEnemy->GetPos().z);
+	}
+	if (m_direction == kLeft)
+	{
+		delX = ((m_pos.x - 10) - pEnemy->GetPos().x) * ((m_pos.x - 10) - pEnemy->GetPos().x);
+		delY = ((m_pos.y + kAddposY) - (pEnemy->GetPos().y + kAddposY)) *
+			((m_pos.y + kAddposY) - (pEnemy->GetPos().y + kAddposY));
+		delZ = (m_pos.z - pEnemy->GetPos().z) * (m_pos.z - pEnemy->GetPos().z);
+	}
+
+	//球と球の距離
+	float Distance = sqrt(delX + delY + delZ);
+
+	//球と球の距離が剣とエネミーの半径よりも小さい場合
+	if (Distance < m_radius + pEnemy->GetRadius())
+	{
+
+		return true;
+	}
+
+
+	return false;
+}

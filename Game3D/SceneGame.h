@@ -59,6 +59,11 @@ private:
 	//カメラの座標
 	VECTOR m_cameraPos;
 
+	int fadeAlpha;
+
+	bool isSceneEnd;
+
+
 	//当たり判定
 	bool m_isPlayerHit;
 	bool m_isAttackHit;
@@ -70,9 +75,6 @@ private:
 	int playerDrawValue;
 	int enemyHp;
 	int enemyDrawValue;
-
-	//メニュー
-	bool m_isMenu;
 
 	VECTOR m_pos;
 

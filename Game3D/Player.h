@@ -1,7 +1,8 @@
 #pragma once
 #include "DxLib.h"
+#include <memory>
 
-
+class Enemy;
 class Player
 {
 public:
@@ -12,22 +13,17 @@ public:
 	void Update(VECTOR cameraPos);
 	void Draw();
 
-
-
-
-
 	//半径の取得
 	float GetRadius() { return m_radius; }
-
-
 
 	//プレイヤーの座標を取得	
 	const VECTOR GetPos() const { return m_pos; }
 	void SetPos(const VECTOR pos) { m_pos = pos; }
-		
+
 	const int& GetHp() const { return m_hp; }
 	void SetHp(const int hp) { m_hp = hp; }
 
+	bool SphereHitFlag(std::shared_ptr<Enemy> pEnemy);
 
 
 private:
@@ -40,13 +36,17 @@ private:
 	//ステージ外に出ないようにする処理
 	void StageProcess();
 
-	enum  state
+
+private:
+	std::shared_ptr<Enemy> m_pEnemy;
+private:
+
+	enum  direction
 	{
-		kWait,			//待機中
-		kMove,			//動いている
-		kAttack,		//攻撃中
-		kAerialSlash,	//空中斬り中
-		kAttackMagic	//魔法攻撃中
+		kRight,
+		kLeft,
+		kUp,
+		kDown
 	};
 
 
@@ -85,6 +85,7 @@ private:
 
 	//表示情報
 	VECTOR m_pos;
+	VECTOR m_pos2;
 	VECTOR m_attackPos;
 	//カメラの位置
 	VECTOR m_cameraPos;

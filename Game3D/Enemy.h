@@ -11,13 +11,13 @@ public:
 	virtual ~Enemy();
 
 	void Init();
-	void Update(Player& player);
+	void Update(VECTOR playerPos);
 	void Draw();
 
 	//プレイヤーと敵の当たり判定
 	bool SphereHitFlag(std::shared_ptr<Player> pPlayer);
 	//攻撃と敵の当たり判定
-	bool SphereHitFlag2(std::shared_ptr<Player> pPlayer);
+	//bool SphereHitFlag2(std::shared_ptr<Player> pPlayer);
 
 
 
@@ -26,9 +26,32 @@ public:
 	void SetPos(VECTOR pos) { m_pos = pos; }
 
 private:
-	std::shared_ptr<Player> m_pPlayer;
+
+	//アニメーション関連
+	void  Animation();
+
+	bool UpdateAnim(int attachNo);
+
+	void ChangeAnim(int animIndex);
+
+	//ステージ外に出ないようにする処理
+	void StageProcess();
+
 
 private:
+	std::shared_ptr<Player> m_pPlayer;
+private:
+	//エネミーの状態
+	enum  state
+	{
+		kMove,			//動いている
+		kAttack,		//攻撃中
+	};
+
+private:
+
+	//状態
+	int m_state;
 
 	int modelHandle;		//モデルハンドル
 
@@ -42,11 +65,15 @@ private:
 
 	//表示情報
 	VECTOR m_pos;
+	VECTOR playerPos;
 	VECTOR SubVector;
 
 	float Angle;
 
 	float angle;
+
+	//攻撃しているかを保持する
+	bool isAttacking;
 
 	int isAttack;
 

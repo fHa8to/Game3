@@ -9,7 +9,12 @@
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	// 一部の関数はDxLib_Init()の前に実行する必要がある
+#ifdef _DEBUG
+
 	ChangeWindowMode(true);
+
+#endif
+
 
 	// 画面のサイズ変更
 	SetGraphMode(Game::kScreenWidth, Game::kScreenHeight, 32);
@@ -22,7 +27,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	SetDrawScreen(DX_SCREEN_BACK);
 
-	//SceneManager* pScene = new SceneManager;
 	SceneManager pScene;
 	pScene.Init();
 

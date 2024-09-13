@@ -63,7 +63,6 @@ void DrawGrid()
 SceneGame::SceneGame():
 	m_isPlayerHit(false),
 	m_isEnemyHit(false),
-	m_isMenu(false),
 	m_isAttackHit(false),
 	m_pos(VGet(0.0f, -300.0f, 0.0f))
 {
@@ -88,6 +87,7 @@ void SceneGame::Init()
 	m_pPlayer->Init();
 	m_pEnemy->Init();
 	m_pCamera->Init();
+
 
 
 	playerHp = P_HP_MAX;
@@ -123,10 +123,10 @@ std::shared_ptr<SceneBase> SceneGame::Update()
 
 	m_isPlayerHit = m_pEnemy->SphereHitFlag(m_pPlayer);
 
-	m_isEnemyHit = m_pEnemy->SphereHitFlag2(m_pPlayer);
+	m_isEnemyHit = m_pPlayer->SphereHitFlag(m_pEnemy);
 
 
-	m_pEnemy->Update(*m_pPlayer);
+	m_pEnemy->Update(m_playerPos);
 	m_pCamera->Update(m_playerPos);
 
 	MV1SetPosition(modelHandle, m_pos);
@@ -156,16 +156,16 @@ std::shared_ptr<SceneBase> SceneGame::Update()
 
 	}
 
-	if (Pad::IsTrigger(PAD_INPUT_3) &&m_isEnemyHit)
+	if (Pad::IsTrigger(PAD_INPUT_1) &&m_isEnemyHit)
 	{
 		VECTOR posVec2;
 		VECTOR moveVec2;
 
 		//エネミーのベクトル座標からプレイヤーのベクトル座標を引いたベクトル
-		posVec2 = VSub(m_pEnemy->GetPos(), m_pPlayer->GetPos());
+		posVec2 = VSub(m_pPlayer->GetPos(),m_pEnemy->GetPos());
 
 		moveVec2 = VScale(posVec2, - (m_pPlayer->GetRadius() + m_pEnemy->GetRadius()));
-		m_pPlayer->SetPos(VAdd(m_pPlayer->GetPos(), moveVec2));
+		m_pEnemy->SetPos(VAdd(m_pEnemy->GetPos(), moveVec2));
 
 		enemyHp -= 1;
 	}
@@ -187,28 +187,46 @@ std::shared_ptr<SceneBase> SceneGame::Update()
 	return shared_from_this();	//自身のshared_ptrを返す
 
 
+
+
 }
 
 void SceneGame::Draw()
 {
 	// ３Ｄモデルの描画
 	MV1DrawModel(modelHandle);
-	//DrawGrid();
+
+
+#ifdef _DEBUG
+
+	DrawGrid();
+	
+#endif
+
 	m_pPlayer->Draw();
 	m_pEnemy->Draw();
 	m_pCamera->Draw();
 
 	int playerColor = GetColor(0, 255, 0);
-	DrawFormatString(20, 600, GetColor(0, 255, 255), "HP ", playerDrawValue);
+	DrawFormatString(15, 600, GetColor(0, 255, 255), "HP ", playerDrawValue);
+	DrawFillBox(50, 600, 350, 616, GetColor(255, 255, 255));
 	DrawFillBox(50, 600, 100 + playerHp * P_DRAW_SIZE, 616, playerColor);
-	DrawLineBox(50, 600, 350, 616, GetColor(255, 255, 255));
 	int enemyColor = GetColor(255, 0, 0);
-	DrawFormatString(20, 50, GetColor(0, 255, 255), "HP ", enemyDrawValue);
+	DrawFormatString(15, 50, GetColor(0, 255, 255), "HP ", enemyDrawValue);
+	DrawFillBox(50, 50, 350, 66, GetColor(255, 255, 255));
 	DrawFillBox(50, 50, 100 + enemyHp * E_DRAW_SIZE, 66, enemyColor);
-	DrawLineBox(50, 50, 350, 66, GetColor(255, 255, 255));
 
 
-	//DrawString(8, 8, "SceneGame", GetColor(255, 255, 255));
+#ifdef _DEBUG
+
+	
+	DrawString(8, 8, "SceneGame", GetColor(255, 255, 255));
+
+#endif
+
+
+
+
 }
 
 void SceneGame::End()

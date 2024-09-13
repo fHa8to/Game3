@@ -6,17 +6,22 @@
 namespace
 {
 	//モデルのファイル名
-	const char* const kModelFilename = "data/model/Knight.mv1";
+	const char* const kModelFilename = "data/model/Bee.mv1";
 
 	//モデルのサイズ変更
-	constexpr float kExpansion = 10.0f;
+	constexpr float kExpansion = 0.1f;
 
 	//敵の速さ
-	constexpr float kSpeed = 0.5f;
+	constexpr float kSpeed = 0.3f;
 
+	//最大まですすめるところ
+	constexpr float kMaxX = 100.0f;
+	constexpr float kMaxZ = 100.0f;
 
 	//アニメーション番号
-	constexpr int kIdleAnimIndex = 1;
+	constexpr int kIdleAnimIndex = 2;
+	constexpr int kAttackAnimIndex = 0;	//攻撃
+
 	//攻撃判定が発生するまでにかかる時間
 	constexpr float kAttackFrameStart = 20;
 	//攻撃判定が終了するまでにかかる時間
@@ -27,7 +32,7 @@ namespace
 	constexpr float kAnimChangeRateSpeed = 1.0f / kAnimChangeFrame;
 
 	//当たり判定
-	constexpr float kAddposY = 15.0f;
+	constexpr float kAddposY = 10.0f;
 
 	//角度
 	constexpr float kAngle = 270.0f * DX_PI_F / 180.0f;
@@ -47,6 +52,7 @@ Enemy::Enemy():
 	m_pPlayer = std::make_shared<Player>();
 	//3Dモデルの読み込み
 	modelHandle = MV1LoadModel(kModelFilename);
+	
 }
 
 Enemy::~Enemy()
@@ -55,26 +61,23 @@ Enemy::~Enemy()
 
 void Enemy::Init()
 {
+
+	//エネミーの初期位置設定
 	m_pos = VGet(-100.0f, 0.0f, 0.0f);
 
 	currentAnimNo = MV1AttachAnim(modelHandle, kIdleAnimIndex, -1, false);
 	prevAnimNo - 1;
 	animBlendRate = 1.0f;
 
-	//エネミーの初期位置設定
 	MV1SetScale(modelHandle, VGet(kExpansion, kExpansion, kExpansion));
 
 
 }
 
-void Enemy::Update(Player& player)
+void Enemy::Update(VECTOR playerPos)
 {	
 
-	VECTOR playerPos = m_pPlayer->GetPos();
-
 	VECTOR toTarget = VSub(playerPos, m_pos);
-
-
 
 	toTarget = VNorm(toTarget);
 	m_distance.x = toTarget.x * kSpeed;
@@ -83,16 +86,23 @@ void Enemy::Update(Player& player)
 	m_pos = VAdd(m_pos, m_distance);
 
 
+
+	// モデルの向きを変える
 	VECTOR SubVector = VSub(playerPos, m_pos);
 
-		// atan2 を使用して角度を取得
+	// atan2 を使用して角度を取得
 	float Angle = atan2(SubVector.x, SubVector.z);
 
 	MV1SetRotationXYZ(modelHandle, VGet(0.0f, Angle + DX_PI_F, 0.0f));
 
+	Animation();
 
+	StageProcess();
+
+	
 	// ３Dモデルのポジション設定
 	MV1SetPosition(modelHandle, m_pos);
+
 }
 
 void Enemy::Draw()
@@ -115,7 +125,7 @@ bool Enemy::SphereHitFlag(std::shared_ptr<Player> pPlayer)
 	float delX = (m_pos.x - pPlayer->GetPos().x) * (m_pos.x - pPlayer->GetPos().x);
 	float delY = ((m_pos.y + kAddposY) - (pPlayer->GetPos().y + kAddposY)) *
 		((m_pos.y + kAddposY) - (pPlayer->GetPos().y + kAddposY));
-	float delZ = (m_pos.z - pPlayer->GetPos().z ) * (m_pos.z - pPlayer->GetPos().z );
+	float delZ = (m_pos.z - pPlayer->GetPos().z) * (m_pos.z - pPlayer->GetPos().z);
 
 	//球と球の距離
 	float Distance = sqrt(delX + delY + delZ);
@@ -132,24 +142,99 @@ bool Enemy::SphereHitFlag(std::shared_ptr<Player> pPlayer)
 }
 
 
-bool Enemy::SphereHitFlag2(std::shared_ptr<Player> pPlayer)
+
+
+void Enemy::Animation()
 {
-	float delX = (m_pos.x - (pPlayer->GetPos().x + 20)) * (m_pos.x - (pPlayer->GetPos().x + 20));;
-	float delY = ((m_pos.y + kAddposY) - (pPlayer->GetPos().y + kAddposY)) *
-		((m_pos.y + kAddposY) - (pPlayer->GetPos().y + kAddposY));
-	float delZ = (m_pos.z - (pPlayer->GetPos().z + 20)) * (m_pos.z - (pPlayer->GetPos().z + 20));
-
-	//球と球の距離
-	float Distance = sqrt(delX + delY + delZ);
-
-	//球と球の距離が剣とエネミーの半径よりも小さい場合
-	if (Distance < m_radius + pPlayer->GetRadius())
+	if (prevAnimNo != -1)
 	{
+		//test 8フレームで切り替え
+		animBlendRate += kAnimChangeRateSpeed;
+		if (animBlendRate >= 1.0f) animBlendRate = 1.0f;
+		//変更後のアニメーション割合を設定する
+		MV1SetAttachAnimBlendRate(modelHandle, prevAnimNo, 1.0f - animBlendRate);
+		MV1SetAttachAnimBlendRate(modelHandle, currentAnimNo, animBlendRate);
+	}
+	bool isLoop = UpdateAnim(currentAnimNo);
+	UpdateAnim(prevAnimNo);
 
-		return true;
+	if (isLoop)
+	{
+		ChangeAnim(kIdleAnimIndex);
 	}
 
-
-	return false;
+	
 }
+
+bool Enemy::UpdateAnim(int attachNo)
+{
+	//アニメーションが設定されていないので終了
+	if (attachNo == -1) return false;
+
+	//アニメーションを進行させる
+	float now = MV1GetAttachAnimTime(modelHandle, attachNo);	//現在の再生カウントを取得
+
+	//現在再生中のアニメーションの総カウントを取得
+	float total = MV1GetAttachAnimTotalTime(modelHandle, attachNo);
+	bool isLoop = false;
+	//アニメーション進める
+	now += 0.5f;
+
+	if (now >= total)
+	{
+		now -= total;
+		isLoop = true;
+	}
+
+	//進めた時間の設定
+	MV1SetAttachAnimTime(modelHandle, attachNo, now);
+
+	return isLoop;
+}
+
+void Enemy::ChangeAnim(int animIndex)
+{
+	//さらに古いアニメーションがアタッチされている場合はこの時点で削除しておく
+	if (prevAnimNo != -1)
+	{
+		MV1DetachAnim(modelHandle, prevAnimNo);
+	}
+
+	//現在再生中の待機アニメーションは変更前のアニメーション扱いに
+	prevAnimNo = currentAnimNo;
+
+	//変更後のアニメーションとして攻撃アニメーションを改めて設定する
+	currentAnimNo = MV1AttachAnim(modelHandle, animIndex, -1, false);
+
+	//切り替えの瞬間は変更後のアニメーションが再生される
+	animBlendRate = 0.0f;
+
+	//変更前のアニメーション100%
+	MV1SetAttachAnimBlendRate(modelHandle, prevAnimNo, 1.0f - animBlendRate);
+	//変更後のアニメーション0%
+	MV1SetAttachAnimBlendRate(modelHandle, currentAnimNo, animBlendRate);
+}
+
+void Enemy::StageProcess()
+{
+	if (m_pos.z > kMaxZ)
+	{
+		m_pos.z = kMaxZ;
+	}
+	else if (m_pos.z < -kMaxZ)
+	{
+		m_pos.z = -kMaxZ;
+	}
+
+	if (m_pos.x < -kMaxX)
+	{
+		m_pos.x = -kMaxX;
+	}
+	else if (m_pos.x > kMaxX)
+	{
+		m_pos.x = kMaxX;
+	}
+
+}
+
 
