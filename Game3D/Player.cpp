@@ -371,6 +371,17 @@ bool Player::SphereHitFlag(std::shared_ptr<Enemy> pEnemy)
 		delY = ((m_pos.y + kAddposY) - (pEnemy->GetPos().y + kAddposY)) *
 			((m_pos.y + kAddposY) - (pEnemy->GetPos().y + kAddposY));
 		delZ = ((m_pos.z + 10)- pEnemy->GetPos().z) * ((m_pos.z + 10) - pEnemy->GetPos().z);
+
+		//球と球の距離
+		float Distance = sqrt(delX + delY + delZ);
+
+		//球と球の距離が剣とエネミーの半径よりも小さい場合
+		if (Distance < m_radius + pEnemy->GetRadius())
+		{
+
+			return true;
+		}
+
 	}
 	if (m_direction == kUp)
 	{
@@ -378,6 +389,17 @@ bool Player::SphereHitFlag(std::shared_ptr<Enemy> pEnemy)
 		delY = ((m_pos.y + kAddposY) - (pEnemy->GetPos().y + kAddposY)) *
 			((m_pos.y + kAddposY) - (pEnemy->GetPos().y + kAddposY));
 		delZ = ((m_pos.z - 10) - pEnemy->GetPos().z) * ((m_pos.z - 10) - pEnemy->GetPos().z);
+
+		//球と球の距離
+		float Distance = sqrt(delX + delY + delZ);
+
+		//球と球の距離が剣とエネミーの半径よりも小さい場合
+		if (Distance < m_radius + pEnemy->GetRadius())
+		{
+
+			return true;
+		}
+
 	}
 	if (m_direction == kRight)
 	{
@@ -385,6 +407,17 @@ bool Player::SphereHitFlag(std::shared_ptr<Enemy> pEnemy)
 		delY = ((m_pos.y + kAddposY) - (pEnemy->GetPos().y + kAddposY)) *
 			((m_pos.y + kAddposY) - (pEnemy->GetPos().y + kAddposY));
 		delZ = (m_pos.z - pEnemy->GetPos().z) * (m_pos.z - pEnemy->GetPos().z);
+
+		//球と球の距離
+		float Distance = sqrt(delX + delY + delZ);
+
+		//球と球の距離が剣とエネミーの半径よりも小さい場合
+		if (Distance < m_radius + pEnemy->GetRadius())
+		{
+
+			return true;
+		}
+
 	}
 	if (m_direction == kLeft)
 	{
@@ -392,18 +425,18 @@ bool Player::SphereHitFlag(std::shared_ptr<Enemy> pEnemy)
 		delY = ((m_pos.y + kAddposY) - (pEnemy->GetPos().y + kAddposY)) *
 			((m_pos.y + kAddposY) - (pEnemy->GetPos().y + kAddposY));
 		delZ = (m_pos.z - pEnemy->GetPos().z) * (m_pos.z - pEnemy->GetPos().z);
+
+		//球と球の距離
+		float Distance = sqrt(delX + delY + delZ);
+
+		//球と球の距離が剣とエネミーの半径よりも小さい場合
+		if (Distance < m_radius + pEnemy->GetRadius())
+		{
+
+			return true;
+		}
+
 	}
-
-	//球と球の距離
-	float Distance = sqrt(delX + delY + delZ);
-
-	//球と球の距離が剣とエネミーの半径よりも小さい場合
-	if (Distance < m_radius + pEnemy->GetRadius())
-	{
-
-		return true;
-	}
-
 
 	return false;
 }

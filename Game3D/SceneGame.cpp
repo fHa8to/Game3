@@ -22,6 +22,7 @@ namespace
 	constexpr float kExpansion = 150.0f;
 }
 
+
 void DrawGrid()
 {
 	for (int x = -80; x <= 80; x += 10)
@@ -69,6 +70,7 @@ SceneGame::SceneGame():
 	m_pEnemy = std::make_shared<Enemy>();
 	m_pPlayer = std::make_shared<Player>();
 	m_pCamera = std::make_shared<Camera>();
+
 	//3Dƒ‚ƒfƒ‹‚Ì“Ç‚İ‚İ
 	modelHandle = MV1LoadModel(kModelFilename);
 
