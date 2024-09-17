@@ -20,9 +20,9 @@ public:
 	const VECTOR GetPos() const { return m_pos; }
 	void SetPos(const VECTOR pos) { m_pos = pos; }
 
-	const int& GetHp() const { return m_hp; }
-	void SetHp(const int hp) { m_hp = hp; }
 
+
+	//UŒ‚‚Æ“G‚Ì‚ ‚½‚è”»’è
 	bool SphereHitFlag(std::shared_ptr<Enemy> pEnemy);
 
 
@@ -41,6 +41,8 @@ private:
 	std::shared_ptr<Enemy> m_pEnemy;
 private:
 
+
+	//•ûŒü
 	enum  direction
 	{
 		kRight,
@@ -85,7 +87,7 @@ private:
 
 	//•\¦î•ñ
 	VECTOR m_pos;
-	VECTOR m_pos2;
+
 	VECTOR m_attackPos;
 	//ƒJƒƒ‰‚ÌˆÊ’u
 	VECTOR m_cameraPos;

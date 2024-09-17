@@ -222,6 +222,7 @@ void Player::Update(VECTOR cameraPos)
 				ChangeAnim(kWalkAnimIndex);
 
 				MV1SetRotationXYZ(modelHandle, VGet(0, kRotateRight, 0));
+
 			}
 			if (Pad::IsRelase(PAD_INPUT_UP))
 			{
@@ -269,9 +270,12 @@ void Player::Draw()
 	// ÇRÇcÉÇÉfÉãÇÃï`âÊ
 	MV1DrawModel(modelHandle);
 
+#ifdef _DEBUG
 
-	//DrawSphere3D(VAdd(m_pos, VGet(0, 8, 0)), m_radius, 8, 0xffffff, 0xffffff, false);
-	//DrawSphere3D(VAdd(m_attackPos, VGet(0, 8, 0)), m_radius, 8, 0xffffff, 0xff00ff, true);
+	DrawSphere3D(VAdd(m_pos, VGet(0, 8, 0)), m_radius, 8, 0xffffff, 0xffffff, false);
+	DrawSphere3D(VAdd(m_attackPos, VGet(0, 8, 0)), m_radius, 8, 0xffffff, 0xff00ff, true);
+
+#endif // _DEBUG
 
 
 }
@@ -353,6 +357,7 @@ void Player::StageProcess()
 	}
 }
 
+//çUåÇÇÃìñÇΩÇËîªíË
 bool Player::SphereHitFlag(std::shared_ptr<Enemy> pEnemy)
 {
 
@@ -376,14 +381,14 @@ bool Player::SphereHitFlag(std::shared_ptr<Enemy> pEnemy)
 	}
 	if (m_direction == kRight)
 	{
-		delX = ((m_pos.x + 10) - pEnemy->GetPos().x) * ((m_pos.x + 10) - pEnemy->GetPos().x);
+		delX = ((m_pos.x - 10) - pEnemy->GetPos().x) * ((m_pos.x - 10) - pEnemy->GetPos().x);
 		delY = ((m_pos.y + kAddposY) - (pEnemy->GetPos().y + kAddposY)) *
 			((m_pos.y + kAddposY) - (pEnemy->GetPos().y + kAddposY));
 		delZ = (m_pos.z - pEnemy->GetPos().z) * (m_pos.z - pEnemy->GetPos().z);
 	}
 	if (m_direction == kLeft)
 	{
-		delX = ((m_pos.x - 10) - pEnemy->GetPos().x) * ((m_pos.x - 10) - pEnemy->GetPos().x);
+		delX = ((m_pos.x + 10) - pEnemy->GetPos().x) * ((m_pos.x + 10) - pEnemy->GetPos().x);
 		delY = ((m_pos.y + kAddposY) - (pEnemy->GetPos().y + kAddposY)) *
 			((m_pos.y + kAddposY) - (pEnemy->GetPos().y + kAddposY));
 		delZ = (m_pos.z - pEnemy->GetPos().z) * (m_pos.z - pEnemy->GetPos().z);

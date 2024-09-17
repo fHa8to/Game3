@@ -138,7 +138,7 @@ std::shared_ptr<SceneBase> SceneGame::Update()
 
 	float length = VSize(toEnemy);
 
-	//プレイヤーと敵が当たった場合
+	//プレイヤーとエネミーが当たった場合
 	if (m_isPlayerHit)
 	{
 
@@ -156,12 +156,13 @@ std::shared_ptr<SceneBase> SceneGame::Update()
 
 	}
 
+	//プレイヤー攻撃が当たった場合
 	if (Pad::IsTrigger(PAD_INPUT_1) &&m_isEnemyHit)
 	{
 		VECTOR posVec2;
 		VECTOR moveVec2;
 
-		//エネミーのベクトル座標からプレイヤーのベクトル座標を引いたベクトル
+		//プレイヤーのベクトル座標からエネミーのベクトル座標を引いたベクトル
 		posVec2 = VSub(m_pPlayer->GetPos(),m_pEnemy->GetPos());
 
 		moveVec2 = VScale(posVec2, - (m_pPlayer->GetRadius() + m_pEnemy->GetRadius()));
@@ -174,13 +175,15 @@ std::shared_ptr<SceneBase> SceneGame::Update()
 	//プレイヤーのHPがゼロになったら
 	if (playerHp <= 0)
 	{
-		{
-			return std::make_shared<SceneOver>();
-		}
+		//SceneOverに遷移
+		return std::make_shared<SceneOver>();
+
 	}
 
+	//エネミーのHPがゼロになったら
 	if (enemyHp <= 0)
 	{
+		//SceneClearに遷移
 		return std::make_shared<SceneClear>();
 
 	}
@@ -207,13 +210,16 @@ void SceneGame::Draw()
 	m_pEnemy->Draw();
 	m_pCamera->Draw();
 
+	//プレイヤーのHPバー
 	int playerColor = GetColor(0, 255, 0);
 	DrawFormatString(15, 600, GetColor(0, 255, 255), "HP ", playerDrawValue);
-	DrawFillBox(50, 600, 350, 616, GetColor(255, 255, 255));
+	DrawFillBox(48, 598, 352, 618, GetColor(255, 255, 255));
 	DrawFillBox(50, 600, 100 + playerHp * P_DRAW_SIZE, 616, playerColor);
+	
+	//エネミーのHPバー
 	int enemyColor = GetColor(255, 0, 0);
 	DrawFormatString(15, 50, GetColor(0, 255, 255), "HP ", enemyDrawValue);
-	DrawFillBox(50, 50, 350, 66, GetColor(255, 255, 255));
+	DrawFillBox(48, 48, 352, 68, GetColor(255, 255, 255));
 	DrawFillBox(50, 50, 100 + enemyHp * E_DRAW_SIZE, 66, enemyColor);
 
 
