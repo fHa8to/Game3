@@ -30,8 +30,8 @@ namespace
 	constexpr float kExpansion = 10.0f;
 
 	//ç≈ëÂÇ‹Ç≈Ç∑Ç∑ÇﬂÇÈÇ∆Ç±ÇÎ
-	constexpr float kMaxX = 100.0f;
-	constexpr float kMaxZ = 100.0f;
+	constexpr float kMaxX = 300.0f;
+	constexpr float kMaxZ = 300.0f;
 
 	//ìñÇΩÇËîªíË
 	constexpr float kAddposY = 10.0f;

@@ -22,10 +22,13 @@ public:
 
 
 	float GetRadius() { return m_radius; }
+
 	VECTOR GetPos() { return m_pos; }
 	void SetPos(VECTOR pos) { m_pos = pos; }
 
 private:
+
+	void Attack();
 
 	//アニメーション関連
 	void  Animation();

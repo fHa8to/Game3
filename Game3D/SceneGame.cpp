@@ -19,7 +19,9 @@ namespace
 	const char* const kModelFilename = "data/model/tileHigh_forest.mv1";
 
 	//モデルのサイズ変更
-	constexpr float kExpansion = 150.0f;
+	constexpr float kExpansionX = 500.0f;
+	constexpr float kExpansionY = 150.0f;
+	constexpr float kExpansionZ = 500.0f;
 }
 
 
@@ -85,7 +87,7 @@ SceneGame::~SceneGame()
 
 void SceneGame::Init()
 {
-	MV1SetScale(modelHandle, VGet(kExpansion, kExpansion, kExpansion));
+	MV1SetScale(modelHandle, VGet(kExpansionX, kExpansionY, kExpansionZ));
 	m_pPlayer->Init();
 	m_pEnemy->Init();
 	m_pCamera->Init();
@@ -168,7 +170,7 @@ std::shared_ptr<SceneBase> SceneGame::Update()
 		posVec2 = VSub(m_pPlayer->GetPos(),m_pEnemy->GetPos());
 
 		moveVec2 = VScale(posVec2, - (m_pPlayer->GetRadius() + m_pEnemy->GetRadius()));
-		m_pEnemy->SetPos(VAdd(m_pEnemy->GetPos(), moveVec2));
+		//m_pEnemy->SetPos(VAdd(m_pEnemy->GetPos(), moveVec2));
 
 		enemyHp -= 1;
 	}

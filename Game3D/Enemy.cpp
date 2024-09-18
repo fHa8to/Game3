@@ -15,8 +15,8 @@ namespace
 	constexpr float kSpeed = 0.3f;
 
 	//最大まですすめるところ
-	constexpr float kMaxX = 100.0f;
-	constexpr float kMaxZ = 100.0f;
+	constexpr float kMaxX = 300.0f;
+	constexpr float kMaxZ = 300.0f;
 
 	//アニメーション番号
 	constexpr int kIdleAnimIndex = 2;
@@ -46,8 +46,9 @@ Enemy::Enemy():
 	animBlendRate(0.0f),
 	angle(0.0f),
 	m_pos(VGet(0,0,0)),
-	m_radius(6.0f)
-
+	m_radius(6.0f),
+	isAttacking(false),
+	isAttack(false)
 {
 	m_pPlayer = std::make_shared<Player>();
 	//3Dモデルの読み込み
@@ -85,7 +86,15 @@ void Enemy::Update(VECTOR playerPos)
 
 	m_pos = VAdd(m_pos, m_distance);
 
+	if (m_distance.x <= 6.0f)
+	{
+		Attack();
+	}
 
+	if (m_distance.x > 1.0f)
+	{
+		m_state = kMove;
+	}
 
 	// モデルの向きを変える
 	VECTOR SubVector = VSub(playerPos, m_pos);
@@ -122,19 +131,22 @@ void Enemy::Draw()
 //球の当たり判定
 bool Enemy::SphereHitFlag(std::shared_ptr<Player> pPlayer)
 {
-	float delX = (m_pos.x - pPlayer->GetPos().x) * (m_pos.x - pPlayer->GetPos().x);
-	float delY = ((m_pos.y + kAddposY) - (pPlayer->GetPos().y + kAddposY)) *
-		((m_pos.y + kAddposY) - (pPlayer->GetPos().y + kAddposY));
-	float delZ = (m_pos.z - pPlayer->GetPos().z) * (m_pos.z - pPlayer->GetPos().z);
-
-	//球と球の距離
-	float Distance = sqrt(delX + delY + delZ);
-
-	//球と球の距離が剣とエネミーの半径よりも小さい場合
-	if (Distance < m_radius + pPlayer->GetRadius())
+	if (m_state == kAttack)
 	{
+		float delX = (m_pos.x - pPlayer->GetPos().x) * (m_pos.x - pPlayer->GetPos().x);
+		float delY = ((m_pos.y + kAddposY) - (pPlayer->GetPos().y + kAddposY)) *
+			((m_pos.y + kAddposY) - (pPlayer->GetPos().y + kAddposY));
+		float delZ = (m_pos.z - pPlayer->GetPos().z) * (m_pos.z - pPlayer->GetPos().z);
 
-		return true;
+		//球と球の距離
+		float Distance = sqrt(delX + delY + delZ);
+
+		//球と球の距離が剣とエネミーの半径よりも小さい場合
+		if (Distance < m_radius + pPlayer->GetRadius())
+		{
+
+			return true;
+		}
 	}
 
 
@@ -143,6 +155,13 @@ bool Enemy::SphereHitFlag(std::shared_ptr<Player> pPlayer)
 
 
 
+
+void Enemy::Attack()
+{
+	isAttack = true;
+	m_state = kAttack;
+
+}
 
 void Enemy::Animation()
 {
@@ -158,12 +177,30 @@ void Enemy::Animation()
 	bool isLoop = UpdateAnim(currentAnimNo);
 	UpdateAnim(prevAnimNo);
 
-	if (isLoop)
+	if (m_state == kMove)
 	{
-		ChangeAnim(kIdleAnimIndex);
+
+		isAttack = false;
+		isAttacking = false;
+
+		if (isLoop)
+		{
+			ChangeAnim(kIdleAnimIndex);
+		}
+	}
+	if (m_state == kAttack)
+	{
+
+		if (isAttacking != isAttack)
+		{
+			isAttacking = isAttack;
+			if (isAttacking)
+			{
+				ChangeAnim(kAttackAnimIndex);
+			}
+		}
 	}
 
-	
 }
 
 bool Enemy::UpdateAnim(int attachNo)
