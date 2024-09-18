@@ -6,10 +6,10 @@
 namespace
 {
 	//モデルのファイル名
-	const char* const kModelFilename = "data/model/Bee.mv1";
+	const char* const kModelFilename = "data/model/Knight.mv1";
 
 	//モデルのサイズ変更
-	constexpr float kExpansion = 0.1f;
+	constexpr float kExpansion = 10.0f;
 
 	//敵の速さ
 	constexpr float kSpeed = 0.3f;
@@ -20,7 +20,7 @@ namespace
 
 	//アニメーション番号
 	constexpr int kIdleAnimIndex = 2;
-	constexpr int kAttackAnimIndex = 0;	//攻撃
+	constexpr int kAttackAnimIndex = 30;	//攻撃
 
 	//攻撃判定が発生するまでにかかる時間
 	constexpr float kAttackFrameStart = 20;
@@ -104,7 +104,9 @@ void Enemy::Update(VECTOR playerPos)
 
 	MV1SetRotationXYZ(modelHandle, VGet(0.0f, Angle + DX_PI_F, 0.0f));
 
+	//アニメーション
 	Animation();
+
 
 	StageProcess();
 
@@ -190,6 +192,7 @@ void Enemy::Animation()
 	}
 	if (m_state == kAttack)
 	{
+		isAttacking = true;
 
 		if (isAttacking != isAttack)
 		{
@@ -252,8 +255,11 @@ void Enemy::ChangeAnim(int animIndex)
 	MV1SetAttachAnimBlendRate(modelHandle, currentAnimNo, animBlendRate);
 }
 
+
+//移動範囲
 void Enemy::StageProcess()
 {
+	//ステージ外に出ないようにする
 	if (m_pos.z > kMaxZ)
 	{
 		m_pos.z = kMaxZ;

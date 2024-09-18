@@ -275,7 +275,7 @@ void Player::Draw()
 	DrawSphere3D(VAdd(m_pos, VGet(0, 8, 0)), m_radius, 8, 0xffffff, 0xffffff, false);
 	DrawSphere3D(VAdd(m_attackPos, VGet(0, 8, 0)), m_radius, 8, 0xffffff, 0xff00ff, true);
 
-#endif // _DEBUG
+#endif
 
 
 }
@@ -333,7 +333,7 @@ void Player::ChangeAnim(int animIndex)
 }
 
 
-//ステージ外に出ないようにする
+//移動範囲
 void Player::StageProcess()
 {
 
