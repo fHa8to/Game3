@@ -6,7 +6,7 @@
 namespace
 {
 	//モデルのファイル名
-	const char* const kModelFilename = "data/model/Knight.mv1";
+	const char* const kModelFilename = "data/model/Barbarian.mv1";
 
 	//モデルのサイズ変更
 	constexpr float kExpansion = 10.0f;
@@ -15,12 +15,13 @@ namespace
 	constexpr float kSpeed = 0.3f;
 
 	//最大まですすめるところ
-	constexpr float kMaxX = 300.0f;
-	constexpr float kMaxZ = 300.0f;
+	constexpr float kMaxX = 3250.0f;
+	constexpr float kMaxZ = 250.0f;
 
 	//アニメーション番号
-	constexpr int kIdleAnimIndex = 2;
+	constexpr int kWalkAnimIndex = 2;		//歩き
 	constexpr int kAttackAnimIndex = 30;	//攻撃
+
 
 	//攻撃判定が発生するまでにかかる時間
 	constexpr float kAttackFrameStart = 20;
@@ -49,15 +50,19 @@ Enemy::Enemy():
 	m_radius(6.0f),
 	isAttacking(false),
 	isAttack(false)
+
 {
 	m_pPlayer = std::make_shared<Player>();
 	//3Dモデルの読み込み
 	modelHandle = MV1LoadModel(kModelFilename);
-	
+
+	m_state = kMove;
+
 }
 
 Enemy::~Enemy()
 {
+
 }
 
 void Enemy::Init()
@@ -66,7 +71,7 @@ void Enemy::Init()
 	//エネミーの初期位置設定
 	m_pos = VGet(-100.0f, 0.0f, 0.0f);
 
-	currentAnimNo = MV1AttachAnim(modelHandle, kIdleAnimIndex, -1, false);
+	currentAnimNo = MV1AttachAnim(modelHandle, kWalkAnimIndex, -1, false);
 	prevAnimNo - 1;
 	animBlendRate = 1.0f;
 
@@ -78,11 +83,13 @@ void Enemy::Init()
 void Enemy::Update(VECTOR playerPos)
 {	
 
+	//プレイヤーの座標
 	VECTOR toTarget = VSub(playerPos, m_pos);
 
 	toTarget = VNorm(toTarget);
 	m_distance.x = toTarget.x * kSpeed;
 	m_distance.z = toTarget.z * kSpeed;
+
 
 	m_pos = VAdd(m_pos, m_distance);
 
@@ -91,17 +98,18 @@ void Enemy::Update(VECTOR playerPos)
 		Attack();
 	}
 
-	if (m_distance.x > 1.0f)
+	if (m_distance.x > 7.0f)
 	{
 		m_state = kMove;
 	}
 
-	// モデルの向きを変える
+	//モデルの向きを変える
 	VECTOR SubVector = VSub(playerPos, m_pos);
 
-	// atan2 を使用して角度を取得
+	// atan を使用して角度を取得
 	float Angle = atan2(SubVector.x, SubVector.z);
 
+	//プレイヤーの方向を向く
 	MV1SetRotationXYZ(modelHandle, VGet(0.0f, Angle + DX_PI_F, 0.0f));
 
 	//アニメーション
@@ -187,7 +195,7 @@ void Enemy::Animation()
 
 		if (isLoop)
 		{
-			ChangeAnim(kIdleAnimIndex);
+			ChangeAnim(kWalkAnimIndex);
 		}
 	}
 	if (m_state == kAttack)

@@ -78,6 +78,9 @@ void SceneClear::Init()
 	//アニメーションの初期設定
 	m_currentAnimNo = MV1AttachAnim(modelHandle, kStandByAnimIndex, -1, true);
 
+
+	SetFontSize(kFontSize);
+
 	m_pos = VGet(kPosX, kPosY, kPosZ);
 
 	m_cameraPos.z = kCameraZ;

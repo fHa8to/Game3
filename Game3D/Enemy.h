@@ -69,7 +69,6 @@ private:
 	//•\¦î•ñ
 	VECTOR m_pos;
 	VECTOR playerPos;
-	VECTOR SubVector;
 
 	float Angle;
 

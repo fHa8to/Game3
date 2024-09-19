@@ -8,6 +8,8 @@
 
 namespace
 {
+	//フォントのサイズ
+	constexpr int kFontSize = 20;
 
 	//フェードイン、フェードアウトの数値
 	constexpr int kFadeValue = 255;
@@ -92,6 +94,7 @@ void SceneGame::Init()
 	m_pEnemy->Init();
 	m_pCamera->Init();
 
+	SetFontSize(kFontSize);
 
 
 	playerHp = P_HP_MAX;
@@ -169,8 +172,8 @@ std::shared_ptr<SceneBase> SceneGame::Update()
 		//プレイヤーのベクトル座標からエネミーのベクトル座標を引いたベクトル
 		posVec2 = VSub(m_pPlayer->GetPos(),m_pEnemy->GetPos());
 
-		moveVec2 = VScale(posVec2, - (m_pPlayer->GetRadius() + m_pEnemy->GetRadius()));
-		//m_pEnemy->SetPos(VAdd(m_pEnemy->GetPos(), moveVec2));
+		moveVec2 = VScale(posVec2,  - (m_pPlayer->GetRadius() + m_pEnemy->GetRadius()));
+		m_pEnemy->SetPos(VAdd(m_pEnemy->GetPos(), moveVec2));
 
 		enemyHp -= 1;
 	}

@@ -17,11 +17,10 @@ namespace
 	constexpr float kAngleSpeed = 0.05f;	
 
 	//注視点の座標
-	constexpr float kCameraTargetY = 20.0f;
+	constexpr float kCameraTargetY = 30.0f;
 
 	//カメラの距離
 	constexpr float kCameraDist = 100.0f;
-	//constexpr float kCameraHeight = 100;
 
 
 	constexpr float AngleSpeed = 0.05f;	// 旋回速度
