@@ -26,13 +26,6 @@ public:
 
 private:
 
-	//プレイヤーに少しづつ近づく
-	void ComingPlayer(VECTOR playerPos);
-
-	void Attack();
-
-	//アニメーション関連
-	void  Animation();
 
 	bool UpdateAnim(int attachNo);
 
@@ -44,6 +37,7 @@ private:
 
 private:
 	std::shared_ptr<Player> m_pPlayer;
+
 private:
 	//エネミーの状態
 	enum  state

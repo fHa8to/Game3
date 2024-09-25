@@ -1,6 +1,7 @@
 #include "Enemy.h"
 #include "DxLib.h"
 #include "Player.h"
+#include "Pad.h"
 #include <cmath>
 
 namespace
@@ -84,6 +85,8 @@ void Enemy::Init()
 
 void Enemy::Update(VECTOR playerPos)
 {	
+
+	
 	if (prevAnimNo != -1)
 	{
 		//test 8フレームで切り替え
@@ -93,13 +96,16 @@ void Enemy::Update(VECTOR playerPos)
 		MV1SetAttachAnimBlendRate(modelHandle, prevAnimNo, 1.0f - animBlendRate);
 		MV1SetAttachAnimBlendRate(modelHandle, currentAnimNo, animBlendRate);
 	}
+
 	bool isLoop = UpdateAnim(currentAnimNo);
 	UpdateAnim(prevAnimNo);
 
 
+	StageProcess();
 
 	//プレイヤーの座標
 	VECTOR toTarget = VSub(playerPos, m_pos);
+
 
 	toTarget = VNorm(toTarget);
 	m_distance.x = toTarget.x * kSpeed;
@@ -108,14 +114,40 @@ void Enemy::Update(VECTOR playerPos)
 
 	m_pos = VAdd(m_pos, m_distance);
 
-	if (m_distance.x <= 11.0f)
+
+	if (m_distance.x <= 0.0f + m_radius)
 	{
+		isAttack = true;
 		m_state = kAttack;
 	}
 
-	if (m_distance.x > 14.0f)
+	if (m_distance.x > 1.0f + m_radius)
 	{
 		m_state = kMove;
+	}
+
+	if (!isAttack)
+	{
+		if (m_state == kAttack)
+		{
+			//isAttack = true;
+
+			ChangeAnim(kAttackAnimIndex);
+			m_state = kMove;
+		}
+	}
+	else
+	{
+		if (m_state == kMove)
+		{
+				isAttack = false;
+				isAttacking = false;
+			if (isLoop)
+			{
+				ChangeAnim(kWalkAnimIndex);
+			}
+		}
+
 	}
 
 	//モデルの向きを変える
@@ -128,38 +160,6 @@ void Enemy::Update(VECTOR playerPos)
 	MV1SetRotationXYZ(modelHandle, VGet(0.0f, Angle + DX_PI_F, 0.0f));
 	// ３Dモデルのポジション設定
 	MV1SetPosition(modelHandle, m_pos);
-
-	//ComingPlayer(playerPos);
-
-	if (!isAttack)
-	{
-
-		if (m_state == kAttack)
-		{
-				isAttack = true;
-				if (isAttacking)
-				{
-					ChangeAnim(kAttackAnimIndex);
-				}
-		}
-	}
-	else
-	{
-		if (m_state == kMove)
-		{
-
-			isAttack = false;
-			if (isLoop)
-			{
-				ChangeAnim(kWalkAnimIndex);
-			}
-		}
-	}
-
-	//アニメーション
-	//Animation();
-
-	StageProcess();
 
 
 }
@@ -219,7 +219,7 @@ bool Enemy::UpdateAnim(int attachNo)
 	float total = MV1GetAttachAnimTotalTime(modelHandle, attachNo);
 	bool isLoop = false;
 
-	while (now >= total)
+	if (now >= total)
 	{
 		now -= total;
 		isLoop = true;

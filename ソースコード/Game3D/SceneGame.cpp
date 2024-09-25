@@ -162,7 +162,7 @@ std::shared_ptr<SceneBase> SceneGame::Update()
 		//エネミーのベクトル座標からプレイヤーのベクトル座標を引いたベクトル
 		posVec = VSub(m_pEnemy->GetPos(), m_pPlayer->GetPos());
 
-		moveVec = VScale(posVec,  - (m_pPlayer->GetRadius() + m_pEnemy->GetRadius()));
+		moveVec = VScale(posVec,   - (m_pPlayer->GetRadius() + m_pEnemy->GetRadius()));
 		m_pPlayer->SetPos(VAdd(m_pPlayer->GetPos(), moveVec));
 
 		playerHp -= 1;
