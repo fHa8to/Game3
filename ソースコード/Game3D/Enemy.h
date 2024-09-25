@@ -16,8 +16,6 @@ public:
 
 	//プレイヤーと敵の当たり判定
 	bool SphereHitFlag(std::shared_ptr<Player> pPlayer);
-	//攻撃と敵の当たり判定
-	//bool SphereHitFlag2(std::shared_ptr<Player> pPlayer);
 
 
 
@@ -27,6 +25,9 @@ public:
 	void SetPos(VECTOR pos) { m_pos = pos; }
 
 private:
+
+	//プレイヤーに少しづつ近づく
+	void ComingPlayer(VECTOR playerPos);
 
 	void Attack();
 

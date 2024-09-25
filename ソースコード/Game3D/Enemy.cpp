@@ -6,11 +6,11 @@
 namespace
 {
 	//モデルのファイル名
-	//const char* const kModelFilename = "data/model/Barbarian.mv1";
-	const char* const kModelFilename = "data/model/Bee.mv1";
+	const char* const kModelFilename = "data/model/Barbarian.mv1";
+	//const char* const kModelFilename = "data/model/Bee.mv1";
 
 	//モデルのサイズ変更
-	constexpr float kExpansion = 0.1f;
+	constexpr float kExpansion = 10.0f;
 
 	//敵の速さ
 	constexpr float kSpeed = 0.3f;
@@ -20,7 +20,6 @@ namespace
 	constexpr float kMaxZ = 200.0f;
 
 	//アニメーション番号
-	constexpr int kIdleAnimIndex = 1;		//待機
 	constexpr int kWalkAnimIndex = 2;		//歩き
 	constexpr int kAttackAnimIndex = 30;	//攻撃
 
@@ -51,14 +50,13 @@ Enemy::Enemy():
 	m_pos(VGet(0,0,0)),
 	m_radius(6.0f),
 	isAttacking(false),
-	isAttack(false)
+	isAttack(false),
+	m_state(kMove)
 
 {
 	m_pPlayer = std::make_shared<Player>();
 	//3Dモデルの読み込み
 	modelHandle = MV1LoadModel(kModelFilename);
-
-	m_state = kMove;
 
 }
 
@@ -77,8 +75,8 @@ void Enemy::Init()
 	prevAnimNo - 1;
 	animBlendRate = 1.0f;
 
-	m_state = kMove;
-	
+	isAttack = false;
+
 	MV1SetScale(modelHandle, VGet(kExpansion, kExpansion, kExpansion));
 
 
@@ -86,6 +84,19 @@ void Enemy::Init()
 
 void Enemy::Update(VECTOR playerPos)
 {	
+	if (prevAnimNo != -1)
+	{
+		//test 8フレームで切り替え
+		animBlendRate += kAnimChangeRateSpeed;
+		if (animBlendRate >= 1.0f) animBlendRate = 1.0f;
+		//変更後のアニメーション割合を設定する
+		MV1SetAttachAnimBlendRate(modelHandle, prevAnimNo, 1.0f - animBlendRate);
+		MV1SetAttachAnimBlendRate(modelHandle, currentAnimNo, animBlendRate);
+	}
+	bool isLoop = UpdateAnim(currentAnimNo);
+	UpdateAnim(prevAnimNo);
+
+
 
 	//プレイヤーの座標
 	VECTOR toTarget = VSub(playerPos, m_pos);
@@ -97,12 +108,12 @@ void Enemy::Update(VECTOR playerPos)
 
 	m_pos = VAdd(m_pos, m_distance);
 
-	if (m_distance.x <= 6.0f)
+	if (m_distance.x <= 11.0f)
 	{
-		Attack();
+		m_state = kAttack;
 	}
 
-	if (m_distance.x > 6.5f)
+	if (m_distance.x > 14.0f)
 	{
 		m_state = kMove;
 	}
@@ -115,16 +126,41 @@ void Enemy::Update(VECTOR playerPos)
 
 	//プレイヤーの方向を向く
 	MV1SetRotationXYZ(modelHandle, VGet(0.0f, Angle + DX_PI_F, 0.0f));
+	// ３Dモデルのポジション設定
+	MV1SetPosition(modelHandle, m_pos);
+
+	//ComingPlayer(playerPos);
+
+	if (!isAttack)
+	{
+
+		if (m_state == kAttack)
+		{
+				isAttack = true;
+				if (isAttacking)
+				{
+					ChangeAnim(kAttackAnimIndex);
+				}
+		}
+	}
+	else
+	{
+		if (m_state == kMove)
+		{
+
+			isAttack = false;
+			if (isLoop)
+			{
+				ChangeAnim(kWalkAnimIndex);
+			}
+		}
+	}
 
 	//アニメーション
-	Animation();
-
+	//Animation();
 
 	StageProcess();
 
-	
-	// ３Dモデルのポジション設定
-	MV1SetPosition(modelHandle, m_pos);
 
 }
 
@@ -168,54 +204,6 @@ bool Enemy::SphereHitFlag(std::shared_ptr<Player> pPlayer)
 }
 
 
-
-
-void Enemy::Attack()
-{
-	isAttack = true;
-	m_state = kAttack;
-
-}
-
-void Enemy::Animation()
-{
-	if (prevAnimNo != -1)
-	{
-		//test 8フレームで切り替え
-		animBlendRate += kAnimChangeRateSpeed;
-		if (animBlendRate >= 1.0f) animBlendRate = 1.0f;
-		//変更後のアニメーション割合を設定する
-		MV1SetAttachAnimBlendRate(modelHandle, prevAnimNo, 1.0f - animBlendRate);
-		MV1SetAttachAnimBlendRate(modelHandle, currentAnimNo, animBlendRate);
-	}
-	bool isLoop = UpdateAnim(currentAnimNo);
-	UpdateAnim(prevAnimNo);
-
-	if (m_state == kMove)
-	{
-
-		isAttack = false;
-		isAttacking = false;
-
-		if (isLoop)
-		{
-			ChangeAnim(kWalkAnimIndex);
-		}
-	}
-	if (m_state == kAttack)
-	{
-		if (isAttacking != isAttack)
-		{
-			isAttacking = isAttack;
-			if (isAttacking)
-			{
-				//ChangeAnim(kAttackAnimIndex);
-			}
-		}
-	}
-
-}
-
 bool Enemy::UpdateAnim(int attachNo)
 {
 	//アニメーションが設定されていないので終了
@@ -224,13 +212,14 @@ bool Enemy::UpdateAnim(int attachNo)
 	//アニメーションを進行させる
 	float now = MV1GetAttachAnimTime(modelHandle, attachNo);	//現在の再生カウントを取得
 
-	//現在再生中のアニメーションの総カウントを取得
-	float total = MV1GetAttachAnimTotalTime(modelHandle, attachNo);
-	bool isLoop = false;
 	//アニメーション進める
 	now += 0.5f;
 
-	if (now >= total)
+	//現在再生中のアニメーションの総カウントを取得
+	float total = MV1GetAttachAnimTotalTime(modelHandle, attachNo);
+	bool isLoop = false;
+
+	while (now >= total)
 	{
 		now -= total;
 		isLoop = true;
