@@ -79,13 +79,6 @@ SceneGame::SceneGame():
 	//3Dƒ‚ƒfƒ‹‚Ì“Ç‚Ýž‚Ý
 	modelHandle = MV1LoadModel(kModelFilename);
 
-	bgm = LoadSoundMem("data/sound/fantasy02.mp3");
-	bgmPlayer = LoadSoundMem("data/sound/Player.mp3");
-	bgmEnemy = LoadSoundMem("data/sound/AxeSound.mp3");
-
-
-	PlaySoundMem(bgm, DX_PLAYTYPE_LOOP);
-
 }
 
 SceneGame::~SceneGame()
@@ -95,6 +88,12 @@ SceneGame::~SceneGame()
 
 void SceneGame::Init()
 {
+	bgm = LoadSoundMem("data/sound/fantasy02.mp3");
+	bgmPlayer = LoadSoundMem("data/sound/Player.mp3");
+	bgmEnemy = LoadSoundMem("data/sound/AxeSound.mp3");
+
+	PlaySoundMem(bgm, DX_PLAYTYPE_LOOP);
+
 	MV1SetScale(modelHandle, VGet(kExpansionX, kExpansionY, kExpansionZ));
 	m_pPlayer->Init();
 	m_pEnemy->Init();

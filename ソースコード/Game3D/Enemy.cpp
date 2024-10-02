@@ -76,7 +76,6 @@ void Enemy::Init()
 	prevAnimNo - 1;
 	animBlendRate = 1.0f;
 
-	isAttack = false;
 
 	MV1SetScale(modelHandle, VGet(kExpansion, kExpansion, kExpansion));
 
@@ -130,10 +129,15 @@ void Enemy::Update(VECTOR playerPos)
 	{
 		if (m_state == kAttack)
 		{
-			//isAttack = true;
+			if (isAttacking != isAttack)
+			{
+				isAttacking = isAttack;
+				if (isAttacking)
+				{
+					ChangeAnim(kAttackAnimIndex);
+				}
+			}
 
-			ChangeAnim(kAttackAnimIndex);
-			m_state = kMove;
 		}
 	}
 	else
