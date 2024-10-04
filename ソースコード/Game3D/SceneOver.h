@@ -37,14 +37,13 @@ private:
 	int m_state;
 
 	//モデル
-	int modelHandle;
-	int modelHandle2;
+	int m_modelHandle;
+	int m_modelHandle2;
 
-	int handle;
 
-	int fadeAlpha;
+	int m_fadeAlpha;
 
-	bool isSceneEnd;
+	bool m_isSceneEnd;
 
 	//アニメーション情報
 	int m_currentAnimNo;	//現在のアニメーション

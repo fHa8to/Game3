@@ -38,26 +38,26 @@ namespace
 	constexpr float kAddposY = 10.0f;
 
 	//角度
-	constexpr float kAngle = 270.0f * DX_PI_F / 180.0f;
+	constexpr float km_angle = 270.0f * DX_PI_F / 180.0f;
 
 }
 
 Enemy::Enemy():
-	modelHandle(-1),
-	currentAnimNo(-1),
-	prevAnimNo(-1),
-	animBlendRate(0.0f),
-	angle(0.0f),
+	m_modelHandle(-1),
+	m_currentAnimNo(-1),
+	m_prevAnimNo(-1),
+	m_animBlendRate(0.0f),
+	m_angle(0.0f),
 	m_pos(VGet(0,0,0)),
 	m_radius(6.0f),
-	isAttacking(false),
-	isAttack(false),
+	m_isAttacking(false),
+	m_isAttack(false),
 	m_state(kMove)
 
 {
 	m_pPlayer = std::make_shared<Player>();
 	//3Dモデルの読み込み
-	modelHandle = MV1LoadModel(kModelFilename);
+	m_modelHandle = MV1LoadModel(kModelFilename);
 
 }
 
@@ -72,12 +72,12 @@ void Enemy::Init()
 	//エネミーの初期位置設定
 	m_pos = VGet(-100.0f, 0.0f, 0.0f);
 
-	currentAnimNo = MV1AttachAnim(modelHandle, kWalkAnimIndex, -1, false);
-	prevAnimNo - 1;
-	animBlendRate = 1.0f;
+	m_currentAnimNo = MV1AttachAnim(m_modelHandle, kWalkAnimIndex, -1, false);
+	m_prevAnimNo - 1;
+	m_animBlendRate = 1.0f;
 
 
-	MV1SetScale(modelHandle, VGet(kExpansion, kExpansion, kExpansion));
+	MV1SetScale(m_modelHandle, VGet(kExpansion, kExpansion, kExpansion));
 
 
 }
@@ -86,18 +86,18 @@ void Enemy::Update(VECTOR playerPos)
 {	
 
 	
-	if (prevAnimNo != -1)
+	if (m_prevAnimNo != -1)
 	{
 		//test 8フレームで切り替え
-		animBlendRate += kAnimChangeRateSpeed;
-		if (animBlendRate >= 1.0f) animBlendRate = 1.0f;
+		m_animBlendRate += kAnimChangeRateSpeed;
+		if (m_animBlendRate >= 1.0f) m_animBlendRate = 1.0f;
 		//変更後のアニメーション割合を設定する
-		MV1SetAttachAnimBlendRate(modelHandle, prevAnimNo, 1.0f - animBlendRate);
-		MV1SetAttachAnimBlendRate(modelHandle, currentAnimNo, animBlendRate);
+		MV1SetAttachAnimBlendRate(m_modelHandle, m_prevAnimNo, 1.0f - m_animBlendRate);
+		MV1SetAttachAnimBlendRate(m_modelHandle, m_currentAnimNo, m_animBlendRate);
 	}
 
-	bool isLoop = UpdateAnim(currentAnimNo);
-	UpdateAnim(prevAnimNo);
+	bool isLoop = UpdateAnim(m_currentAnimNo);
+	UpdateAnim(m_prevAnimNo);
 
 
 	StageProcess();
@@ -116,7 +116,6 @@ void Enemy::Update(VECTOR playerPos)
 
 	if (m_distance.x <= 0.0f + m_radius)
 	{
-		isAttack = true;
 		m_state = kAttack;
 	}
 
@@ -125,14 +124,14 @@ void Enemy::Update(VECTOR playerPos)
 		m_state = kMove;
 	}
 
-	if (!isAttack)
+	if (!m_isAttack)
 	{
 		if (m_state == kAttack)
 		{
-			if (isAttacking != isAttack)
+			if (m_isAttacking != m_isAttack)
 			{
-				isAttacking = isAttack;
-				if (isAttacking)
+				m_isAttacking = m_isAttack;
+				if (m_isAttacking)
 				{
 					ChangeAnim(kAttackAnimIndex);
 				}
@@ -144,8 +143,7 @@ void Enemy::Update(VECTOR playerPos)
 	{
 		if (m_state == kMove)
 		{
-				isAttack = false;
-				isAttacking = false;
+				m_isAttacking = false;
 			if (isLoop)
 			{
 				ChangeAnim(kWalkAnimIndex);
@@ -158,12 +156,12 @@ void Enemy::Update(VECTOR playerPos)
 	VECTOR SubVector = VSub(playerPos, m_pos);
 
 	// atan を使用して角度を取得
-	float Angle = atan2(SubVector.x, SubVector.z);
+	float m_angle = atan2(SubVector.x, SubVector.z);
 
 	//プレイヤーの方向を向く
-	MV1SetRotationXYZ(modelHandle, VGet(0.0f, Angle + DX_PI_F, 0.0f));
+	MV1SetRotationXYZ(m_modelHandle, VGet(0.0f, m_angle + DX_PI_F, 0.0f));
 	// ３Dモデルのポジション設定
-	MV1SetPosition(modelHandle, m_pos);
+	MV1SetPosition(m_modelHandle, m_pos);
 
 
 }
@@ -171,7 +169,7 @@ void Enemy::Update(VECTOR playerPos)
 void Enemy::Draw()
 {
 	// ３Ｄモデルの描画
-	MV1DrawModel(modelHandle);
+	MV1DrawModel(m_modelHandle);
 
 #ifdef _DEBUG
 
@@ -214,13 +212,13 @@ bool Enemy::UpdateAnim(int attachNo)
 	if (attachNo == -1) return false;
 
 	//アニメーションを進行させる
-	float now = MV1GetAttachAnimTime(modelHandle, attachNo);	//現在の再生カウントを取得
+	float now = MV1GetAttachAnimTime(m_modelHandle, attachNo);	//現在の再生カウントを取得
 
 	//アニメーション進める
 	now += 0.5f;
 
 	//現在再生中のアニメーションの総カウントを取得
-	float total = MV1GetAttachAnimTotalTime(modelHandle, attachNo);
+	float total = MV1GetAttachAnimTotalTime(m_modelHandle, attachNo);
 	bool isLoop = false;
 
 	if (now >= total)
@@ -230,7 +228,7 @@ bool Enemy::UpdateAnim(int attachNo)
 	}
 
 	//進めた時間の設定
-	MV1SetAttachAnimTime(modelHandle, attachNo, now);
+	MV1SetAttachAnimTime(m_modelHandle, attachNo, now);
 
 	return isLoop;
 }
@@ -238,24 +236,24 @@ bool Enemy::UpdateAnim(int attachNo)
 void Enemy::ChangeAnim(int animIndex)
 {
 	//さらに古いアニメーションがアタッチされている場合はこの時点で削除しておく
-	if (prevAnimNo != -1)
+	if (m_prevAnimNo != -1)
 	{
-		MV1DetachAnim(modelHandle, prevAnimNo);
+		MV1DetachAnim(m_modelHandle, m_prevAnimNo);
 	}
 
 	//現在再生中の待機アニメーションは変更前のアニメーション扱いに
-	prevAnimNo = currentAnimNo;
+	m_prevAnimNo = m_currentAnimNo;
 
 	//変更後のアニメーションとして攻撃アニメーションを改めて設定する
-	currentAnimNo = MV1AttachAnim(modelHandle, animIndex, -1, false);
+	m_currentAnimNo = MV1AttachAnim(m_modelHandle, animIndex, -1, false);
 
 	//切り替えの瞬間は変更後のアニメーションが再生される
-	animBlendRate = 0.0f;
+	m_animBlendRate = 0.0f;
 
 	//変更前のアニメーション100%
-	MV1SetAttachAnimBlendRate(modelHandle, prevAnimNo, 1.0f - animBlendRate);
+	MV1SetAttachAnimBlendRate(m_modelHandle, m_prevAnimNo, 1.0f - m_animBlendRate);
 	//変更後のアニメーション0%
-	MV1SetAttachAnimBlendRate(modelHandle, currentAnimNo, animBlendRate);
+	MV1SetAttachAnimBlendRate(m_modelHandle, m_currentAnimNo, m_animBlendRate);
 }
 
 

@@ -53,7 +53,7 @@ private:
 
 
 private:
-	int		modelHandle;	//モデルハンドル
+	int		m_modelHandle;	//モデルハンドル
 
 	//アニメーション情報
 	int m_currentAnimNo;
