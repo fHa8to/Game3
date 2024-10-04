@@ -124,6 +124,8 @@ void Enemy::Update(VECTOR playerPos)
 		m_state = kMove;
 	}
 
+
+
 	if (!m_isAttack)
 	{
 		if (m_state == kAttack)
