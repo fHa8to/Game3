@@ -140,6 +140,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Components.cpp" />
     <ClCompile Include="Enemy.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Pad.cpp" />
@@ -153,6 +154,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Components.h" />
     <ClInclude Include="Enemy.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="Pad.h" />
@@ -163,6 +165,8 @@
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="SceneOver.h" />
     <ClInclude Include="SceneTitle.h" />
+    <ClInclude Include="Singleton.h" />
+    <ClInclude Include="Vec3.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
