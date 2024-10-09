@@ -185,23 +185,9 @@ void Enemy::Draw()
 //球の当たり判定
 bool Enemy::SphereHitFlag(std::shared_ptr<Player> pPlayer)
 {
-	if (m_state == kAttack)
-	{
-		float delX = (m_pos.x - pPlayer->GetPos().x) * (m_pos.x - pPlayer->GetPos().x);
-		float delY = ((m_pos.y + kAddposY) - (pPlayer->GetPos().y + kAddposY)) *
-			((m_pos.y + kAddposY) - (pPlayer->GetPos().y + kAddposY));
-		float delZ = (m_pos.z - pPlayer->GetPos().z) * (m_pos.z - pPlayer->GetPos().z);
 
-		//球と球の距離
-		float Distance = sqrt(delX + delY + delZ);
 
-		//球と球の距離が剣とエネミーの半径よりも小さい場合
-		if (Distance < m_radius + pPlayer->GetRadius())
-		{
 
-			return true;
-		}
-	}
 
 
 	return false;

@@ -95,7 +95,6 @@ void SceneGame::Init()
 	PlaySoundMem(m_bgm, DX_PLAYTYPE_LOOP);
 
 	MV1SetScale(m_modelHandle, VGet(kExpansionX, kExpansionY, kExpansionZ));
-	m_pPlayer->Init();
 	m_pEnemy->Init();
 	m_pCamera->Init();
 
@@ -126,63 +125,12 @@ std::shared_ptr<SceneBase> SceneGame::Update()
 	{
 		m_enemyDrawValue--;
 	}
-	
-	m_cameraPos = m_pCamera->GetCameraPos();
 
-	m_pPlayer->Update(m_cameraPos);
-
-	m_playerPos = m_pPlayer->GetPos();
-
-	m_isPlayerHit = m_pEnemy->SphereHitFlag(m_pPlayer);
-
-	m_isEnemyHit = m_pPlayer->SphereHitFlag(m_pEnemy);
-
-
+	m_pPlayer->Update();
 	m_pEnemy->Update(m_playerPos);
 	m_pCamera->Update(m_playerPos);
 
 	MV1SetPosition(m_modelHandle, m_pos);
-
-
-
-	VECTOR tom_enemy = VSub(m_pEnemy->GetPos(), m_pPlayer->GetPos());
-
-
-	float length = VSize(tom_enemy);
-
-	//プレイヤーとエネミーが当たった場合
-	if (m_isPlayerHit)
-	{
-
-		VECTOR posVec;
-		VECTOR moveVec;
-
-		PlaySoundMem(m_bgmPlayer, DX_PLAYTYPE_BACK);
-		//エネミーのベクトル座標からプレイヤーのベクトル座標を引いたベクトル
-		posVec = VSub(m_pEnemy->GetPos(), m_pPlayer->GetPos());
-
-		moveVec = VScale(posVec,   - (m_pPlayer->GetRadius() + m_pEnemy->GetRadius()));
-		m_pPlayer->SetPos(VAdd(m_pPlayer->GetPos(), moveVec));
-
-		m_playerHp -= 1;
-
-	}
-
-	//プレイヤー攻撃が当たった場合
-	if (Pad::IsTrigger(PAD_INPUT_1) &&m_isEnemyHit)
-	{
-		VECTOR posVec2;
-		VECTOR moveVec2;
-
-		PlaySoundMem(m_bgmEnemy, DX_PLAYTYPE_BACK);
-		//プレイヤーのベクトル座標からエネミーのベクトル座標を引いたベクトル
-		posVec2 = VSub(m_pPlayer->GetPos(),m_pEnemy->GetPos());
-
-		moveVec2 = VScale(posVec2,  - (m_pPlayer->GetRadius() + m_pEnemy->GetRadius()));
-		m_pEnemy->SetPos(VAdd(m_pEnemy->GetPos(), moveVec2));
-
-		m_enemyHp -= 1;
-	}
 
 
 	//プレイヤーのHPがゼロになったら

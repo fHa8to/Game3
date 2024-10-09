@@ -1,117 +1,111 @@
 #pragma once
 #include "DxLib.h"
+#include "Components.h"
 #include <memory>
+#include <typeinfo>
 
-class Enemy;
+
 class Player
 {
 public:
 	Player();
 	virtual ~Player();
 
-	void Init();
-	void Update(VECTOR cameraPos);
-	void Draw();
+	void Update();
+	void Draw() const; 
 
-	//半径の取得
-	float GetRadius() { return m_radius; }
+	//移動ベクトルを返す
+	Vec3 GetMoveVec();
 
-	//プレイヤーの座標を取得	
-	const VECTOR GetPos() const { return m_pos; }
-	void SetPos(const VECTOR pos) { m_pos = pos; }
+	//ゲームオーバーフラグを得る
+	bool isGameOver();
 
+	// コンポーネントを渡す関数
+	template<typename T>
+	T* GetComponent() {
 
-
-	//攻撃と敵のあたり判定
-	bool SphereHitFlag(std::shared_ptr<Enemy> pEnemy);
-
-
-private:
-
-
-	bool UpdateAnim(int attachNo);
-
-	void ChangeAnim(int animIndex);
-
-	//ステージ外に出ないようにする処理
-	void StageProcess();
-
+		if (typeid(T) == typeid(Transform)) {
+			return reinterpret_cast<T*>(&m_Ctransform);
+		}
+		else if (typeid(T) == typeid(Model)) {
+			return reinterpret_cast<T*>(&m_Cmodel);
+		}
+		else if (typeid(T) == typeid(Capsule)) {
+			return reinterpret_cast<T*>(&m_Ccapsule);
+		}
+		return nullptr;
+	}
 
 private:
-	std::shared_ptr<Enemy> m_pEnemy;
-private:
 
+	//移動関数
+	void MoveControl();
 
-	//方向
-	enum  direction
-	{
-		kRight,
-		kLeft,
-		kUp,
-		kDown
-	};
+	//マップとのコリジョン
+	void MapCollision();
 
+	//攻撃関数
+	void AttackControl();
 
-private:
-	int		m_modelHandle;	//モデルハンドル
+	//自身の攻撃のあたり判定をとる
+	void AttackCollision();
 
-	//アニメーション情報
-	int m_currentAnimNo;
-	int m_prevAnimNo;
-	float m_animBlendRate;
+	//アニメーションコントロール
+	void AnimControl();
 
-	//状態
-	int m_state;
+	//敵との当たり判定をとり位置を調節する
+	void EnemyCollision();
 
-	//向いている方向
-	int m_direction;
+	//敵の攻撃との当たり判定をとる
+	void EnemyAttackCollision();
 
-	//Aボタンを何回押したか
-	int m_countAButton;
+	//トランスフォームコンポーネント
+	Transform m_Ctransform;
 
-	//Xボタンを何回押したか
-	int m_countXButton;
+	//3Dモデルコンポーネント
+	Model m_Cmodel;
 
+	//アニメーションコンポーネント
+	Animation m_Canim;
 
-	//動いているかを保持する
-	bool m_isMove;
+	//カプセルコンポーネント
+	Capsule m_Ccapsule;
 
+	// 攻撃コリジョンカプセル
+	Capsule m_CattackCapsule;
 
-
-	bool m_isAttacking;
-
+	//移動ベクトルを保存しておく
+	Vec3 m_moveVec;
 
 	//HP
-	int m_hp;
+	int m_HP;
 
+	//攻撃フラグ
+	bool m_attackFlug;
 
-	//表示情報
-	VECTOR m_pos;
+	//ダッシュフラグ
+	bool m_dashFlug;
 
-	VECTOR m_attackPos;
-	//カメラの位置
-	VECTOR m_cameraPos;
+	//アタックコリジョン有効化フラグ
+	bool m_attackColFlug;
 
-	float angle;
+	//死亡フラグ
+	bool m_deathFlug;
 
-	//当たり判定の半径
-	float m_radius;
+	//ゲーム終了フラグ
+	bool m_gameEndFlug;
 
-	//カメラ情報
-	float m_cameraAngle;
+	//攻撃フレームカウンタ
+	int m_attackFlame;
 
+	//攻撃サウンドハンドル
+	int m_attackSoundHandle;
 
-	//動いているか
-	bool m_iskStandby;
+	//攻撃が当たる判定のときに使うフレームカウンタ
+	int m_acceptFlameCount;
 
-	//歩いているか
-	bool m_isWalk;
-
-	//走っているか
-	bool m_isRun;
-
-	//攻撃しているか
-	bool m_isAttack;
+	//攻撃が当たるときのフラグ
+	bool m_acceptFlug;
 
 
 };
