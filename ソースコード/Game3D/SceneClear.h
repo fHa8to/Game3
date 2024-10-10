@@ -42,6 +42,8 @@ private:
 	int m_fadeAlpha;
 
 	bool m_isSceneEnd;
+	bool m_isCommand;
+
 
 	//アニメーション情報
 	int m_currentAnimNo;	//現在のアニメーション

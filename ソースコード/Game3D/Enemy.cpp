@@ -1,14 +1,12 @@
 #include "Enemy.h"
 #include "DxLib.h"
 #include "Player.h"
-#include "Pad.h"
 #include <cmath>
 
 namespace
 {
 	//モデルのファイル名
 	const char* const kModelFilename = "data/model/Barbarian.mv1";
-	//const char* const kModelFilename = "data/model/Bee.mv1";
 
 	//モデルのサイズ変更
 	constexpr float kExpansion = 10.0f;
@@ -21,6 +19,7 @@ namespace
 	constexpr float kMaxZ = 200.0f;
 
 	//アニメーション番号
+	constexpr int kIdleAnimIndex = 1;		//待機
 	constexpr int kWalkAnimIndex = 2;		//歩き
 	constexpr int kAttackAnimIndex = 30;	//攻撃
 
@@ -38,7 +37,7 @@ namespace
 	constexpr float kAddposY = 10.0f;
 
 	//角度
-	constexpr float km_angle = 270.0f * DX_PI_F / 180.0f;
+	constexpr float kangle = 270.0f * DX_PI_F / 180.0f;
 
 }
 
@@ -51,13 +50,14 @@ Enemy::Enemy():
 	m_pos(VGet(0,0,0)),
 	m_radius(6.0f),
 	m_isAttacking(false),
-	m_isAttack(false),
-	m_state(kMove)
+	m_isAttack(false)
 
 {
 	m_pPlayer = std::make_shared<Player>();
 	//3Dモデルの読み込み
 	m_modelHandle = MV1LoadModel(kModelFilename);
+
+	m_state = kMove;
 
 }
 
@@ -76,7 +76,8 @@ void Enemy::Init()
 	m_prevAnimNo - 1;
 	m_animBlendRate = 1.0f;
 
-
+	m_state = kMove;
+	
 	MV1SetScale(m_modelHandle, VGet(kExpansion, kExpansion, kExpansion));
 
 
@@ -84,8 +85,6 @@ void Enemy::Init()
 
 void Enemy::Update(VECTOR playerPos)
 {	
-
-	
 	if (m_prevAnimNo != -1)
 	{
 		//test 8フレームで切り替え
@@ -95,16 +94,12 @@ void Enemy::Update(VECTOR playerPos)
 		MV1SetAttachAnimBlendRate(m_modelHandle, m_prevAnimNo, 1.0f - m_animBlendRate);
 		MV1SetAttachAnimBlendRate(m_modelHandle, m_currentAnimNo, m_animBlendRate);
 	}
-
 	bool isLoop = UpdateAnim(m_currentAnimNo);
 	UpdateAnim(m_prevAnimNo);
 
 
-	StageProcess();
-
 	//プレイヤーの座標
 	VECTOR toTarget = VSub(playerPos, m_pos);
-
 
 	toTarget = VNorm(toTarget);
 	m_distance.x = toTarget.x * kSpeed;
@@ -113,9 +108,9 @@ void Enemy::Update(VECTOR playerPos)
 
 	m_pos = VAdd(m_pos, m_distance);
 
-
 	if (m_distance.x <= 0.0f + m_radius)
 	{
+		m_isAttack = true;
 		m_state = kAttack;
 	}
 
@@ -125,35 +120,28 @@ void Enemy::Update(VECTOR playerPos)
 	}
 
 
-
-	if (!m_isAttack)
+	if (m_state == kMove)
 	{
-		if (m_state == kAttack)
-		{
-			if (m_isAttacking != m_isAttack)
-			{
-				m_isAttacking = m_isAttack;
-				if (m_isAttacking)
-				{
-					ChangeAnim(kAttackAnimIndex);
-				}
-			}
 
+		m_isAttack = false;
+		m_isAttacking = false;
+
+		if (isLoop)
+		{
+			ChangeAnim(kWalkAnimIndex);
 		}
 	}
-	else
+	if (m_state == kAttack)
 	{
-		if (m_state == kMove)
+		if (m_isAttacking != m_isAttack)
 		{
-				m_isAttacking = false;
-			if (isLoop)
+			m_isAttacking = m_isAttack;
+			if (m_isAttacking)
 			{
-				ChangeAnim(kWalkAnimIndex);
+				ChangeAnim(kAttackAnimIndex);
 			}
 		}
-
 	}
-
 	//モデルの向きを変える
 	VECTOR SubVector = VSub(playerPos, m_pos);
 
@@ -162,9 +150,13 @@ void Enemy::Update(VECTOR playerPos)
 
 	//プレイヤーの方向を向く
 	MV1SetRotationXYZ(m_modelHandle, VGet(0.0f, m_angle + DX_PI_F, 0.0f));
+
+	//移動範囲
+	StageProcess();
+
+	
 	// ３Dモデルのポジション設定
 	MV1SetPosition(m_modelHandle, m_pos);
-
 
 }
 
@@ -185,13 +177,29 @@ void Enemy::Draw()
 //球の当たり判定
 bool Enemy::SphereHitFlag(std::shared_ptr<Player> pPlayer)
 {
+	if (m_state == kAttack)
+	{
+		float delX = (m_pos.x - pPlayer->GetPos().x) * (m_pos.x - pPlayer->GetPos().x);
+		float delY = ((m_pos.y + kAddposY) - (pPlayer->GetPos().y + kAddposY)) *
+			((m_pos.y + kAddposY) - (pPlayer->GetPos().y + kAddposY));
+		float delZ = (m_pos.z - pPlayer->GetPos().z) * (m_pos.z - pPlayer->GetPos().z);
 
+		//球と球の距離
+		float Distance = sqrt(delX + delY + delZ);
 
+		//球と球の距離が剣とエネミーの半径よりも小さい場合
+		if (Distance < m_radius + pPlayer->GetRadius())
+		{
 
+			return true;
+		}
+	}
 
 
 	return false;
 }
+
+
 
 
 bool Enemy::UpdateAnim(int attachNo)
@@ -202,12 +210,11 @@ bool Enemy::UpdateAnim(int attachNo)
 	//アニメーションを進行させる
 	float now = MV1GetAttachAnimTime(m_modelHandle, attachNo);	//現在の再生カウントを取得
 
-	//アニメーション進める
-	now += 0.5f;
-
 	//現在再生中のアニメーションの総カウントを取得
 	float total = MV1GetAttachAnimTotalTime(m_modelHandle, attachNo);
 	bool isLoop = false;
+	//アニメーション進める
+	now += 0.5f;
 
 	if (now >= total)
 	{

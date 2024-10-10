@@ -51,6 +51,7 @@ namespace
 SceneTitle::SceneTitle():
 	m_pos(VGet(0.0f, 0.0f, 0.0f)),
 	m_cameraPos(VGet(0.0f, 0.0f, 0.0f)),
+	m_isCommand(false),
 	m_handle(false),
 	m_modelHandle(false),
 	m_state(kWait)
@@ -103,15 +104,19 @@ void SceneTitle::Init()
 std::shared_ptr<SceneBase> SceneTitle::Update()
 {
 
-	if (Pad::IsTrigger(PAD_INPUT_1))	// パッドの1ボタンorキーボードのZキー
+	if (!m_isCommand)
 	{
+		if (Pad::IsTrigger(PAD_INPUT_1))	// パッドの1ボタンorキーボードのZキー
+		{
 
-		m_isSceneEnd = true;
-		PlaySoundFile(kBgmButton, DX_PLAYTYPE_BACK);
+			m_isSceneEnd = true;
+			m_isCommand = true;
+
+			PlaySoundFile(kBgmButton, DX_PLAYTYPE_BACK);
 
 
+		}
 	}
-
 	if(m_isSceneEnd && m_fadeAlpha >= kFadeValue)
 	{
 		return std::make_shared<SceneGame>();

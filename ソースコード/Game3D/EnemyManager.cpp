@@ -1,112 +1,383 @@
-#include "EnemyManager.h"
 #include "DxLib.h"
-#include "Enemy.h"
-#include "Components.h"
-#include "Constants.h"
-#include "SceneManager.h"
+#include "Bee.h"
+#include "Slime.h"
+#include "Knight.h"
+#include "EnemyManager.h"
+
+namespace
+{
+	//ステージ1で出てくる敵の数
+	constexpr int kStage1EnemyNum = 3;
+
+	//ステージ2で出てくる敵の数
+	constexpr int kStage2EnemyNum = 5;
+
+	//ステージ3で出てくる敵の数
+	constexpr int kStage3EnemyNum = 7;
+
+	//ステージ4で出てくる敵の数
+	constexpr int kStage4EnemyNum = 10;
+
+	//3秒に1回敵を生成する
+	constexpr int kTimer = 180;
+
+	//0ならハチを生成
+	constexpr int kBee = 0;
+
+	//1ならスライムを生成
+	constexpr int kSlime = 1;
+
+	//プレイヤーの場所によってエネミーを生成する
+	constexpr float kStage1playerPosX = -4500.0f;
+	
+	constexpr float kStage2playerPosX = 265.0f;
+	
+	constexpr float kStage3playerPosX = 6175.0f;
+	
+	constexpr float kStage4playerPosX = 12000.0f;
+
+	//残り人数を示す位置
+	constexpr int kRestEnemysX = 850;
+	constexpr int kRestEnemysY = 50;
+
+}
+
+EnemyManager::EnemyManager():m_timer(0),m_enemyNum(0),m_isClear1(false),m_isClear2(false),
+m_isClear3(false),m_isClear4(false)
+{
+	m_beeHandle = MV1LoadModel("data/model/Enemy/Bee.mv1");
+	m_slimeHandle = MV1LoadModel("data/model/Enemy/Slime.mv1");
+}
+
+EnemyManager::~EnemyManager()
+{
+	MV1DeleteModel(m_beeHandle);
+	MV1DeleteModel(m_slimeHandle);
+
+	for (int i = 0; i < kEnemyNum; i++)
+	{
+		delete m_pBee[i];
+		delete m_pSlime[i];
+
+		m_pBee[i] = nullptr;
+		m_pSlime[i] = nullptr;
+	}
+}
 
 void EnemyManager::Init()
 {
-	m_spawActiveFlug = true;
-	m_level = 1;
-	m_flame = 0;
-	m_timeFlame = 0;
+	m_enemyNumRetention1 = kStage1EnemyNum;
 
-	pEnemy.clear();
-	pEnemyCupsle.clear();
+	m_enemyNumRetention2 = kStage2EnemyNum;
 
-	// モデルのロード
-	m_model = MV1LoadModel("data/model/Rabit.mv1");
+	m_enemyNumRetention3 = kStage3EnemyNum;
 
-	// ゲームが始まってすぐ敵がスポーンするようにする
-	m_flame = Constants::getInstance().SPAWN_INTERVAL_EASY;
+	m_enemyNumRetention4 = kStage4EnemyNum;
+
+	for (int i = 0; i < kEnemyNum; i++)
+	{
+		m_pBee[i] = nullptr;
+		m_pSlime[i] = nullptr;
+	}
 }
 
-void EnemyManager::Update(Vec3 plPos)
+void EnemyManager::Update(Knight* knight,VECTOR playerPos, Rect playerCollision, Rect playerAttackCollision)
 {
-	// 定数のインスタンスを取得する
-	auto& constants = Constants::getInstance();
 
-	// 常に時間を計測して難易度を変える
-	m_timeFlame++;
-	if (m_timeFlame >= constants.TIME_FRAME_NIGHTMARE && m_level != constants.LEVEL_NIGHTMARE) {
-		m_level = constants.LEVEL_NIGHTMARE;
-	}
-	else if (m_timeFlame >= constants.TIME_FRAME_HARD && m_level != constants.LEVEL_HARD) {
-		m_level = constants.LEVEL_HARD;
-	}
-	else if (m_timeFlame >= constants.TIME_FRAME_NIGHTMARE && m_level != constants.LEVEL_NORMAL) {
-		m_level = constants.LEVEL_NORMAL;
-	}
+	CreateEnemy(playerPos);
 
-	// エネミーをスポーンさせる関数を定義
-	auto spawn = [&](int coolTime){
-		if (m_flame >= coolTime) {
-			pEnemy.push_back(std::make_shared<EnemyRabbit>(MV1DuplicateModel(m_model), GetRand(3)));
-			m_flame = 0;
-		}
-	};
+	StageClear(playerPos);
+	
+	for (int i = 0; i < kEnemyNum; i++)
+	{
+		if (m_pBee[i])
+		{
+			m_pBee[i]->Update(knight,playerPos);
+			
+			m_beeCollision[i] = m_pBee[i]->GetBeeCollision();
 
-	// 難易度によってスポーンするインターバルを変更する
-	if (m_spawActiveFlug) {
-		m_flame++;
-		if (m_level == constants.LEVEL_EASY) {
-			spawn(constants.SPAWN_INTERVAL_EASY);
-		}
-		else if (m_level == constants.LEVEL_HARD) {
-			spawn(constants.SPAWN_INTERVAL_NORMAL);
-		}
-		else if (m_level == constants.LEVEL_NIGHTMARE){
-			spawn(constants.SPAWN_INTERVAL_HARD);
-		}
-		else {
-			spawn(constants.SPAWN_INTERVAL_NIGHTMARE);
-		}
-	}
+			m_pBee[i]->HitAttack(playerAttackCollision);
 
-	// 要素の更新処理
-	for (std::shared_ptr<EnemyRabbit> enemy : pEnemy) {
-		enemy->Update(plPos,pEnemyCupsle);
-	}
+			m_pBee[i]->HitPlayer(knight,playerCollision);
 
-	// エネミーが死んでいたら削除する
-	for (auto it = pEnemy.begin(); it != pEnemy.end();) {
-		if ((*it)->IsDead()) {
-			it = pEnemy.erase(it);	//要素を削除し次の要素を指すイテレータを取得
+			m_beeHp[i] = m_pBee[i]->GetBeeHp();
+
+			if (m_beeHp[i] <= 0)
+			{
+				if (playerPos.x < kStage1playerPosX)
+				{
+					m_enemyNumRetention1--;
+				}
+				else if (playerPos.x < kStage2playerPosX)
+				{
+					m_enemyNumRetention2--;
+				}
+				else if (playerPos.x < kStage3playerPosX)
+				{
+					m_enemyNumRetention3--;
+				}
+				else if (playerPos.x < kStage4playerPosX)
+				{
+					m_enemyNumRetention3--;
+				}
+				delete m_pBee[i];
+				m_pBee[i] = nullptr;
+			}
+
+			
 		}
-		else {
-			it++;
+		if (m_pSlime[i])
+		{
+			m_pSlime[i]->Update(knight, playerPos);
+	
+			m_slimeCollision[i] = m_pSlime[i]->GetSlimeCollision();
+
+			m_pSlime[i]->HitAttack(playerAttackCollision);
+
+			m_pSlime[i]->HitPlayer(knight, playerCollision);
+
+			m_slimeHp[i] = m_pSlime[i]->GetSlimeHp();
+
+			if (m_slimeHp[i] <= 0)
+			{
+				if (playerPos.x < kStage1playerPosX)
+				{
+					m_enemyNumRetention1--;
+				}
+				else if (playerPos.x < kStage2playerPosX)
+				{
+					m_enemyNumRetention2--;
+				}
+				else if (playerPos.x < kStage3playerPosX)
+				{
+					m_enemyNumRetention3--;
+				}
+				else if (playerPos.x < kStage4playerPosX)
+				{
+					m_enemyNumRetention4--;
+				}
+				delete m_pSlime[i];
+				m_pSlime[i] = nullptr;
+			}
 		}
 	}
 }
 
-void EnemyManager::Draw() const
+void EnemyManager::Draw()
 {
-	// 要素の描画処理
-	for (std::shared_ptr<EnemyRabbit> enemy : pEnemy) {
-		enemy->Draw();
-	}
-}
+	DrawEnemys();
 
-void EnemyManager::StopSpawn()
-{
-	m_spawActiveFlug = false;
-}
-
-void EnemyManager::CapsuleUpdate()
-{
-	// 攻撃カプセルの管理
-	for (auto it = pEnemyCupsle.begin(); it != pEnemyCupsle.end();) {
-		if (!(*it)->IsActivation()) {
-			it = pEnemyCupsle.erase(it);
+	for (int i = 0; i < kEnemyNum; i++)
+	{
+		if (m_pBee[i])
+		{
+			m_pBee[i]->Draw();
 		}
-		else {
-			it++;
+	}
+
+	for (int i = 0; i < kEnemyNum; i++)
+	{
+		if (m_pSlime[i])
+		{
+			m_pSlime[i]->Draw();
 		}
 	}
 }
 
-int EnemyManager::GetTime()
+void EnemyManager::CreateEnemy(VECTOR playerPos)
 {
-	return m_timeFlame;
+	if (playerPos.x <= kStage1playerPosX)
+	{
+		if (m_enemyNum < kStage1EnemyNum)
+		{
+			m_timer++;
+			if (m_timer == kTimer)
+			{
+				m_randomEnemy = GetRand(1);
+				m_timer = 0;
+
+				if (m_randomEnemy == kBee)
+				{
+					CreateBee(playerPos);
+				}
+				if (m_randomEnemy == kSlime)
+				{
+					CreateSlime(playerPos);
+				}
+			}
+		}	
+	}
+	else if (playerPos.x <= kStage2playerPosX)
+	{
+		if (m_enemyNum < kStage2EnemyNum)
+		{
+			m_timer++;
+			if (m_timer == kTimer)
+			{
+				m_randomEnemy = GetRand(1);
+				m_timer = 0;
+
+				if (m_randomEnemy == kBee)
+				{
+					CreateBee(playerPos);
+				}
+				if (m_randomEnemy == kSlime)
+				{
+					CreateSlime(playerPos);
+				}
+			}
+		}
+	}
+	else if (playerPos.x <= kStage3playerPosX)
+	{
+		if (m_enemyNum < kStage3EnemyNum)
+		{
+			m_timer++;
+			if (m_timer == kTimer)
+			{
+				m_randomEnemy = GetRand(1);
+				m_timer = 0;
+
+				if (m_randomEnemy == kBee)
+				{
+					CreateBee(playerPos);
+				}
+				if (m_randomEnemy == kSlime)
+				{
+					CreateSlime(playerPos);
+				}
+			}
+		}
+	}
+	else if (playerPos.x <= kStage4playerPosX)
+	{
+		if (m_enemyNum < kStage4EnemyNum)
+		{
+			m_timer++;
+			if (m_timer == kTimer)
+			{
+				m_randomEnemy = GetRand(1);
+				m_timer = 0;
+
+				if (m_randomEnemy == kBee)
+				{
+					CreateBee(playerPos);
+				}
+				if (m_randomEnemy == kSlime)
+				{
+					CreateSlime(playerPos);
+				}
+			}
+		}
+	}
 }
+
+void EnemyManager::CreateBee(VECTOR playerPos)
+{
+	for (int i = 0; i < kEnemyNum; i++)
+	{
+		if (!m_pBee[i])
+		{
+			m_pBee[i] = new Bee(m_beeHandle, playerPos);
+			m_pBee[i]->Init();
+			m_enemyNum++;
+
+			return;
+		}
+
+	}
+}
+
+void EnemyManager::CreateSlime(VECTOR playerPos)
+{
+	for (int i = 0; i < kEnemyNum; i++)
+	{
+		if (!m_pSlime[i])
+		{
+			m_pSlime[i] = new Slime(m_slimeHandle, playerPos);
+			m_pSlime[i]->Init();
+			m_enemyNum++;
+
+			return;
+		}
+	}
+}
+
+void EnemyManager::DrawEnemys()
+{
+	// HP の値を文字列とバーで表示
+	if (!m_isClear1)
+	{
+		DrawFormatString(kRestEnemysX, kRestEnemysY, GetColor(255, 255, 255), "残り敵数 : %d", m_enemyNumRetention1);
+	}
+	else if (!m_isClear2)
+	{
+		DrawFormatString(kRestEnemysX, kRestEnemysY, GetColor(255, 255, 255), "残り敵数 : %d", m_enemyNumRetention2);
+	}
+	else if (!m_isClear3)
+	{
+		DrawFormatString(kRestEnemysX, kRestEnemysY, GetColor(255, 255, 255), "残り敵数 : %d", m_enemyNumRetention3);
+	}
+	else if (!m_isClear4)
+	{
+		DrawFormatString(kRestEnemysX, kRestEnemysY, GetColor(255, 255, 255), "残り敵数 : %d", m_enemyNumRetention4);
+	}
+	
+}
+
+void EnemyManager::StageClear(VECTOR playerPos)
+{
+	if (playerPos.x < kStage1playerPosX)
+	{
+		if (m_enemyNumRetention1 == 0)
+		{
+			m_isClear1 = true;
+
+			m_isStageClear = m_isClear1;
+		}
+		else
+		{
+			m_isStageClear =false;
+		}
+	}
+	else if (playerPos.x < kStage2playerPosX)
+	{
+		if (m_enemyNumRetention2 == 0)
+		{
+			m_isClear2 = true;
+
+			m_isStageClear = m_isClear2;
+		}
+		else
+		{
+			m_isStageClear = false;
+		}
+	}
+	else if (playerPos.x < kStage3playerPosX)
+	{
+		if (m_enemyNumRetention3 == 0)
+		{
+			m_isClear3 = true;
+		}
+		else
+		{
+			m_isStageClear = false;
+		}
+	}
+	else if (playerPos.x < kStage4playerPosX)
+	{
+		if (m_enemyNumRetention4 == 0)
+		{
+			m_isStageClear = true;
+		}
+		else
+		{
+			m_isStageClear = false;
+		}
+	}
+	
+	
+}
+
+
+

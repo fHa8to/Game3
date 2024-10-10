@@ -59,6 +59,9 @@ private:
 	//ƒJƒƒ‰‚ÌÀ•W
 	VECTOR m_cameraPos;
 
+
+
+
 	//“–‚½‚è”»’è
 	bool m_isPlayerHit;
 	bool m_isAttackHit;

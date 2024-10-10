@@ -50,7 +50,8 @@ namespace
 
 SceneClear::SceneClear():
 	m_pos(VGet(0.0f, 0.0f, 0.0f)),
-	m_cameraPos(VGet(0.0f, 0.0f, 0.0f))
+	m_cameraPos(VGet(0.0f, 0.0f, 0.0f)),
+	m_isCommand(false)
 {
 }
 
@@ -94,12 +95,15 @@ void SceneClear::Init()
 
 std::shared_ptr<SceneBase>  SceneClear::Update()
 {
-	if (Pad::IsTrigger(PAD_INPUT_1))	// パッドの1ボタンorキーボードのZキー
+	if (!m_isCommand)
 	{
+		if (Pad::IsTrigger(PAD_INPUT_1))	// パッドの1ボタンorキーボードのZキー
+		{
 
-		m_isSceneEnd = true;
-		PlaySoundFile(kBgmButton, DX_PLAYTYPE_BACK);
+			m_isSceneEnd = true;
+			PlaySoundFile(kBgmButton, DX_PLAYTYPE_BACK);
 
+		}
 	}
 
 	//モデルの位置更新

@@ -106,6 +106,8 @@ std::shared_ptr<SceneBase> SceneOver::Update()
 	{
 
 		m_isSceneEnd = true;
+		m_isCommand = true;
+
 		PlaySoundFile(kBgmButton, DX_PLAYTYPE_BACK);
 
 	}

@@ -37,7 +37,6 @@ private:
 
 private:
 	std::shared_ptr<Player> m_pPlayer;
-
 private:
 	//エネミーの状態
 	enum  state

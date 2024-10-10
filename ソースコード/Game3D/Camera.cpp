@@ -58,7 +58,7 @@ void Camera::Init()
 }
 
 
-void Camera::Update(VECTOR mplayerPos)
+void Camera::Update(VECTOR m_playerPos)
 {
 
 #if _DEBUG
@@ -94,10 +94,10 @@ void Camera::Update(VECTOR mplayerPos)
 	m_cameraPos.z = sinf(m_angleH) * kCameraDist;
 
 	// ÉJÉÅÉâç¿ïW
-	m_cameraPos = VAdd(mplayerPos, m_cameraPos);
+	m_cameraPos = VAdd(m_playerPos, m_cameraPos);
 
 	// íçéãì_
-	m_cameraTarget = VAdd(mplayerPos, VGet(0.0f, kCameraTargetY, 0.0f));
+	m_cameraTarget = VAdd(m_playerPos, VGet(0.0f, kCameraTargetY, 0.0f));
 
 	SetCameraPositionAndTarget_UpVecY(m_cameraPos, m_cameraTarget);
 

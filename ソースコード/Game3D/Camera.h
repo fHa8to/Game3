@@ -13,7 +13,7 @@ public:
 
     void Init();
 
-    void Update(VECTOR mplayerPos);
+    void Update(VECTOR m_playerPos);
 
     void Draw();
 
@@ -39,8 +39,6 @@ private:
     //カメラの注視点
     VECTOR m_cameraTarget;
 
-    //プレイヤーの座標
-    VECTOR m_playerTarget;
 
 };
 

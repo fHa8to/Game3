@@ -1,111 +1,117 @@
 #pragma once
 #include "DxLib.h"
-#include "Components.h"
 #include <memory>
-#include <typeinfo>
 
-
+class Enemy;
 class Player
 {
 public:
 	Player();
 	virtual ~Player();
 
-	void Update();
-	void Draw() const; 
+	void Init();
+	void Update(VECTOR cameraPos);
+	void Draw();
 
-	//移動ベクトルを返す
-	Vec3 GetMoveVec();
+	//半径の取得
+	float GetRadius() { return m_radius; }
 
-	//ゲームオーバーフラグを得る
-	bool isGameOver();
+	//プレイヤーの座標を取得	
+	const VECTOR GetPos() const { return m_pos; }
+	void SetPos(const VECTOR pos) { m_pos = pos; }
 
-	// コンポーネントを渡す関数
-	template<typename T>
-	T* GetComponent() {
 
-		if (typeid(T) == typeid(Transform)) {
-			return reinterpret_cast<T*>(&m_Ctransform);
-		}
-		else if (typeid(T) == typeid(Model)) {
-			return reinterpret_cast<T*>(&m_Cmodel);
-		}
-		else if (typeid(T) == typeid(Capsule)) {
-			return reinterpret_cast<T*>(&m_Ccapsule);
-		}
-		return nullptr;
-	}
+
+	//攻撃と敵のあたり判定
+	bool SphereHitFlag(std::shared_ptr<Enemy> pEnemy);
+
 
 private:
 
-	//移動関数
-	void MoveControl();
 
-	//マップとのコリジョン
-	void MapCollision();
+	bool UpdateAnim(int attachNo);
 
-	//攻撃関数
-	void AttackControl();
+	void ChangeAnim(int animIndex);
 
-	//自身の攻撃のあたり判定をとる
-	void AttackCollision();
+	//ステージ外に出ないようにする処理
+	void StageProcess();
 
-	//アニメーションコントロール
-	void AnimControl();
 
-	//敵との当たり判定をとり位置を調節する
-	void EnemyCollision();
+private:
+	std::shared_ptr<Enemy> m_pEnemy;
+private:
 
-	//敵の攻撃との当たり判定をとる
-	void EnemyAttackCollision();
 
-	//トランスフォームコンポーネント
-	Transform m_Ctransform;
+	//方向
+	enum  direction
+	{
+		kRight,
+		kLeft,
+		kUp,
+		kDown
+	};
 
-	//3Dモデルコンポーネント
-	Model m_Cmodel;
 
-	//アニメーションコンポーネント
-	Animation m_Canim;
+private:
+	int		m_modelHandle;	//モデルハンドル
 
-	//カプセルコンポーネント
-	Capsule m_Ccapsule;
+	//アニメーション情報
+	int m_currentAnimNo;
+	int m_prevAnimNo;
+	float m_animBlendRate;
 
-	// 攻撃コリジョンカプセル
-	Capsule m_CattackCapsule;
+	//状態
+	int m_state;
 
-	//移動ベクトルを保存しておく
-	Vec3 m_moveVec;
+	//向いている方向
+	int m_direction;
+
+	//Aボタンを何回押したか
+	int m_countAButton;
+
+	//Xボタンを何回押したか
+	int m_countXButton;
+
+
+	//動いているかを保持する
+	bool m_isMove;
+
+
+
+	bool m_isAttacking;
+
 
 	//HP
-	int m_HP;
+	int m_hp;
 
-	//攻撃フラグ
-	bool m_attackFlug;
 
-	//ダッシュフラグ
-	bool m_dashFlug;
+	//表示情報
+	VECTOR m_pos;
 
-	//アタックコリジョン有効化フラグ
-	bool m_attackColFlug;
+	VECTOR m_attackPos;
+	//カメラの位置
+	VECTOR m_cameraPos;
 
-	//死亡フラグ
-	bool m_deathFlug;
+	float angle;
 
-	//ゲーム終了フラグ
-	bool m_gameEndFlug;
+	//当たり判定の半径
+	float m_radius;
 
-	//攻撃フレームカウンタ
-	int m_attackFlame;
+	//カメラ情報
+	float m_cameraAngle;
 
-	//攻撃サウンドハンドル
-	int m_attackSoundHandle;
 
-	//攻撃が当たる判定のときに使うフレームカウンタ
-	int m_acceptFlameCount;
+	//動いているか
+	bool m_iskStandby;
 
-	//攻撃が当たるときのフラグ
-	bool m_acceptFlug;
+	//歩いているか
+	bool m_isWalk;
+
+	//走っているか
+	bool m_isRun;
+
+	//攻撃しているか
+	bool m_isAttack;
 
 
 };
