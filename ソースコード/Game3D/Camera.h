@@ -1,7 +1,9 @@
 #pragma once
 #include "DxLib.h"
+#include <memory>
 
 class Player;
+class Enemy;
 
 class Camera
 {
@@ -13,31 +15,29 @@ public:
 
     void Init();
 
-    void Update(VECTOR m_playerPos);
+    void TitleCameraUpdate();
+    void PlayCameraUpdate(Player& player);		//ゲームプレイ用のカメラ設定
 
-    void Draw();
+    //カメラのアングルを取得
+    const float GetAngle() const { return m_angle; }
 
-    VECTOR GetCameraPos() const noexcept { return m_cameraPos; }
+    //カメラの座標を取得
+    const VECTOR& GetPos() const { return m_pos; }
+    //注視点の座標を取得
+    const VECTOR& GetTargetPos() const { return m_targetPos; }
 
 private:
 
-    //ジョイパッドの出力
-    DINPUT_JOYSTATE m_input;
+    std::shared_ptr<Player> m_pPlayer;
 
-    //ジョイパッドの出力の保持
-    int m_pad;
+    void DrawGrid();
 
-    // 水平角度
-    float m_angleH;
+    VECTOR m_pos;			//カメラ座標
+    VECTOR m_targetPos;		//注視点座標
+    VECTOR m_cameraangle;			//カメラのアングル
 
 
-    float m_cameraAngle;
-
-    //カメラの座標
-    VECTOR m_cameraPos;
-
-    //カメラの注視点
-    VECTOR m_cameraTarget;
+    float m_angle;	//カメラ角度
 
 
 };
