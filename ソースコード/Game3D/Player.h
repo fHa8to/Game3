@@ -128,7 +128,6 @@ private:
 
 	//“®‚¢‚Ä‚¢‚é‚©‚ğ•Û‚·‚é
 	bool m_isMove;
-	bool m_isDown;
 	bool m_isCommand;
 	bool m_isAttacking;
 
@@ -167,14 +166,11 @@ private:
 	//“®‚¢‚Ä‚¢‚é‚©
 	bool m_iskStandby;
 
-	//•à‚¢‚Ä‚¢‚é‚©
-	bool m_isWalk;
 
 	//‘–‚Á‚Ä‚¢‚é‚©
 	bool m_isRun;
 
 	//UŒ‚‚µ‚Ä‚¢‚é‚©
-	bool m_isAttack;
 
 
 };

@@ -128,9 +128,8 @@ std::shared_ptr<SceneBase> SceneGame::Update()
 		m_enemyDrawValue--;
 	}
 	
-	m_cameraPos = m_pCamera->GetCameraPos();
 
-	m_pPlayer->Update(m_cameraPos);
+	m_pPlayer->Update();
 
 	m_playerPos = m_pPlayer->GetPos();
 
@@ -140,7 +139,7 @@ std::shared_ptr<SceneBase> SceneGame::Update()
 
 
 	m_pEnemy->Update(m_playerPos);
-	m_pCamera->Update(m_playerPos);
+	//m_pCamera->Update();
 
 	MV1SetPosition(m_modelHandle, m_pos);
 
@@ -226,7 +225,7 @@ void SceneGame::Draw()
 
 	m_pPlayer->Draw();
 	m_pEnemy->Draw();
-	m_pCamera->Draw();
+	//m_pCamera->Draw();
 
 	//プレイヤーのHPバー
 	int playerColor = GetColor(0, 255, 0);

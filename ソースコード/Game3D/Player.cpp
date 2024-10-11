@@ -2,6 +2,7 @@
 #include "Enemy.h"
 #include "Pad.h"
 #include <cmath>
+#include <cassert>
 
 namespace
 {
@@ -72,6 +73,7 @@ Player::Player():
 	m_analogZ(0.0f),
 	m_pos(),
 	m_angle(0.0f),
+	m_isWalk(false),
 	m_isAttack(false),
 	m_isDown(false),
 	m_cameraAngle(0.0f),
