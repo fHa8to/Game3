@@ -175,6 +175,7 @@ void SceneTitle::Draw()
 void SceneTitle::End()
 {
 }
+
 void SceneTitle::Animation()
 {
 	if (m_prevAnimNo != -1)
